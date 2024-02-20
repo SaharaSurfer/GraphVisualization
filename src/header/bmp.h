@@ -4,13 +4,16 @@
 #include <cstdint>
 
 #pragma pack(push, 1)
-struct BmpHeader {
+struct FileHeader {
   uint16_t file_type{0x4D42};
-  uint32_t file_size{0};
-  uint16_t reserved1{0};
-  uint16_t reserved2{0};
-  uint32_t offset_data{0};
-  uint32_t size{ 0 };
+  uint32_t file_size{54};
+  uint16_t reserved_1{0};
+  uint16_t reserved_2{0};
+  uint32_t offset_data{54};
+};
+
+struct InfoHeader {
+  uint32_t header_size{ 40 };
   int32_t width{ 0 };
   int32_t height{ 0 };
   uint16_t planes{ 1 };
@@ -24,4 +27,4 @@ struct BmpHeader {
 };
 #pragma pack(pop)
 
-#endif  // GRAPHVISUALIZATION_HEADER_BMP_H
+#endif  // GRAPHVISUALIZATION_HEADER_BMP_H_
