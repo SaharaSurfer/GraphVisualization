@@ -21,8 +21,8 @@ GraphVisualizator::ReadGraph(const std::string& filename) {
     size_t node_1, node_2;
     input >> node_1 >> node_2;
 
-    graph[node_1 - 1].push_back(node_2);
-    graph[node_2 - 1].push_back(node_1);
+    graph[node_1 - 1].push_back(node_2 - 1);
+    graph[node_2 - 1].push_back(node_1 - 1);
   }
 
   input.close();
