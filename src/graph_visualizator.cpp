@@ -10,8 +10,7 @@ GraphVisualizator::ReadGraph(const std::string& filename) {
   std::ifstream input(filename);
 
   if (!input) {
-    std::cerr << "File wasn't opened";
-    return;
+    throw std::runtime_error("Failed to open file");
   }
   
   input >> vertex_num_ >> edge_num_;
