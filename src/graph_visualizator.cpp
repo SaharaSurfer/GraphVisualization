@@ -4,6 +4,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <stack>
 
 void GraphVisualizator::ReadGraph(const std::string& filename) {
   std::ifstream input(filename);
@@ -26,4 +27,48 @@ void GraphVisualizator::ReadGraph(const std::string& filename) {
   input.close();
 
   graph_ = graph;
+}
+
+std::vector<std::vector<size_t>>
+GraphVisualizator::SearchForConnectivityComponents() {
+  std::vector<std::vector<size_t>> connectivity_components;
+  std::vector<bool> visited_vertices(vertex_num_, false);
+
+  for (size_t i = 0; i < vertex_num_; ++i) {
+    if (!visited_vertices[i]) {
+      FindConnectivityComponent(i, &visited_vertices, 
+                                &connectivity_components);
+    }
+  }
+  
+  return connectivity_components;
+}
+
+void GraphVisualizator::FindConnectivityComponent(
+    const size_t& vertex_ind, 
+    std::vector<bool> *visited,
+    std::vector<std::vector<size_t>> *connectivity_components) {
+  std::vector<size_t> connectivity_comp;
+  std::stack<size_t> stack;
+  stack.push(vertex_ind);
+
+  while (!stack.empty()) {
+    size_t current = stack.top();
+    stack.pop();
+
+    if ((*visited)[current]) {
+      continue;
+    }
+    
+    (*visited)[current] = true;
+    connectivity_comp.push_back(current);
+
+    for (size_t adjacent : graph_[current]) {
+      if (!(*visited)[adjacent]) {
+        stack.push(adjacent);
+      }
+    }
+  }
+
+  connectivity_components->push_back(connectivity_comp);
 }

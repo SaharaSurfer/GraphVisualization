@@ -9,6 +9,11 @@ public:
   GraphVisualizator() = default;
 
   void ReadGraph(const std::string& filename);
+  std::vector<std::vector<size_t>> SearchForConnectivityComponents();
+  void FindConnectivityComponent(
+      const size_t &vertex_ind,
+      std::vector<bool> *visited,
+      std::vector<std::vector<size_t>> *connectivity_components);
 
 private:
   size_t vertex_num_ = 0;
