@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <stack>
+#include <utility>
 
 void GraphVisualizator::ReadGraph(const std::string& filename) {
   std::ifstream input(filename);
@@ -71,4 +72,56 @@ void GraphVisualizator::FindConnectivityComponent(
   }
 
   connectivity_components->push_back(connectivity_comp);
+}
+
+std::vector<std::pair<size_t, size_t>> GraphVisualizator::SearchForBridges() {
+  std::vector<bool> visited_vertices(vertex_num_, false);
+  std::vector<size_t> time_in(vertex_num_);
+  std::vector<size_t> min_time_in_reachable(vertex_num_);
+  std::vector<std::pair<size_t, size_t>> bridges;
+
+  for (size_t i = 0; i < vertex_num_; ++i) {
+    if (!visited_vertices[i]) {
+      FindBridge(i, -1, &visited_vertices, &time_in, 
+                 &min_time_in_reachable, &bridges);
+    }
+  }
+
+  return bridges;
+}
+
+void GraphVisualizator::FindBridge(
+    const size_t& vertex_ind,
+    const size_t& parent_ind,
+    std::vector<bool> *visited,
+    std::vector<size_t> *time_in,
+    std::vector<size_t> *min_time_in_reachable,
+    std::vector<std::pair<size_t, size_t>> *bridges) {
+  static size_t timer = 0;
+
+  (*visited)[vertex_ind] = true;
+  (*time_in)[vertex_ind] = (*min_time_in_reachable)[vertex_ind] = timer++;
+  for (size_t i = 0; i < graph_[vertex_ind].size(); ++i) {
+    size_t to = graph_[vertex_ind][i];
+    if (to == parent_ind) {
+      continue;
+    }
+
+    if ((*visited)[to]) {
+      (*min_time_in_reachable)[vertex_ind] = std::min(
+          (*min_time_in_reachable)[vertex_ind],
+          (*time_in)[to]);
+    } else {
+      FindBridge(to, vertex_ind, visited, time_in, 
+                 min_time_in_reachable, bridges);
+      
+      (*min_time_in_reachable)[vertex_ind] = std::min(
+        (*min_time_in_reachable)[vertex_ind],
+        (*min_time_in_reachable)[to]);
+      
+      if ((*min_time_in_reachable)[to] > (*time_in)[vertex_ind]) {
+        bridges->push_back(std::make_pair(vertex_ind, to));
+      }
+    }
+  }
 }
