@@ -10,6 +10,7 @@ public:
   GraphVisualizator() = default;
 
   void ReadGraph(const std::string& filename);
+
   std::vector<std::vector<size_t>> SearchForConnectivityComponents();
   void FindConnectivityComponent(
       const size_t& vertex_ind,
@@ -23,6 +24,12 @@ public:
                   std::vector<size_t> *time_in,
                   std::vector<size_t> *min_time_in_reachable,
                   std::vector<std::pair<size_t, size_t>> *bridges);
+  
+  std::vector<size_t> GetCycle();
+  bool DetectCycle(const size_t& vertex_ind,
+                   size_t *cycle_start, size_t *cycle_end,
+                   std::vector<char> *vertex_color,
+                   std::vector<size_t> *parents);
 
 private:
   size_t vertex_num_ = 0;

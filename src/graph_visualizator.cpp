@@ -6,6 +6,7 @@
 #include <vector>
 #include <stack>
 #include <utility>
+#include <algorithm>
 
 void GraphVisualizator::ReadGraph(const std::string& filename) {
   std::ifstream input(filename);
@@ -124,4 +125,58 @@ void GraphVisualizator::FindBridge(
       }
     }
   }
+}
+
+std::vector<size_t> GraphVisualizator::GetCycle() {
+  size_t cycle_start = SIZE_MAX;
+  size_t cycle_end = SIZE_MAX;
+  std::vector<char> vertex_color(vertex_num_, 0);
+  std::vector<size_t> parents(vertex_num_);
+
+  for (size_t i = 0; i < vertex_num_; ++i) {
+    if (vertex_color[i] == 0 && 
+        DetectCycle(i, &cycle_start, &cycle_end, &vertex_color, &parents)) {
+      break;
+    }
+  }
+
+  std::vector<size_t> cycle;
+  if (cycle_start == SIZE_MAX) {
+    return cycle;
+  }
+
+  while (cycle_end != cycle_start) {
+    cycle.push_back(cycle_end);
+    cycle_end = parents[cycle_end];
+  }
+  cycle.push_back(cycle_start);
+
+  return cycle;
+}
+
+bool GraphVisualizator::DetectCycle(const size_t& vertex_ind,
+                                    size_t *cycle_start, size_t *cycle_end,
+                                    std::vector<char> *vertex_color,
+                                    std::vector<size_t> *parents) {
+  (*vertex_color)[vertex_ind] = 1;
+
+  for (size_t neighbour : graph_[vertex_ind]) {
+    if ((*vertex_color)[neighbour] == 0) {
+      (*parents)[neighbour] = vertex_ind;
+
+      if (DetectCycle(neighbour, cycle_start, cycle_end, 
+                      vertex_color, parents)) {
+        return true;
+      }
+    } else if ((*vertex_color)[neighbour] == 1 && 
+               neighbour != (*parents)[vertex_ind]) {
+      *cycle_end = std::min(*cycle_end, vertex_ind);
+      *cycle_start = std::min(*cycle_start, neighbour);
+      return true;
+    }
+  }
+  
+  (*vertex_color)[vertex_ind] = 2;
+  
+  return false;
 }
