@@ -64,8 +64,10 @@ std::vector<std::vector<std::shared_ptr<Vertex>>>
 GraphVisualizator::CreateVertexFiltration() {
   std::vector<std::vector<std::shared_ptr<Vertex>>> filtration{graph_};
 
+  int debug = 1000;
+
   std::srand(std::time(NULL));
-  while (true) {
+  while (filtration.back().size() > 3) {
     std::vector<std::shared_ptr<Vertex>> predecessor = filtration.back();
     std::vector<std::shared_ptr<Vertex>> successor;
 
@@ -83,8 +85,18 @@ GraphVisualizator::CreateVertexFiltration() {
             predecessor.end());
       }
     }
+    
+    if (successor.size() < 3) {
+      debug -= 1;
 
-    if (successor == filtration.back()) { break; }
+      if (debug == 0) {
+        debug = 1000;
+        filtration.pop_back();
+      }
+
+      continue;
+    }
+
     filtration.push_back(successor);
   }
 
