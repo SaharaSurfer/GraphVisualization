@@ -22,6 +22,7 @@ public:
 
   void ReadGraph(const std::string& filename);
   std::vector<size_t> BFS(std::shared_ptr<Vertex> root);
+  std::vector<std::vector<std::shared_ptr<Vertex>>> CreateVertexFiltration();
 
 private:
   size_t vertex_num_ = 0;

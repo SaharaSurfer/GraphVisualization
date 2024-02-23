@@ -6,6 +6,10 @@
 #include <vector>
 #include <queue>
 #include <memory>
+#include <cstdlib>
+#include <ctime>
+#include <cmath>
+#include <algorithm>
 
 void GraphVisualizator::ReadGraph(const std::string& filename) {
   std::ifstream input(filename);
@@ -37,7 +41,7 @@ void GraphVisualizator::ReadGraph(const std::string& filename) {
 std::vector<size_t> GraphVisualizator::BFS(std::shared_ptr<Vertex> root) {
   std::vector<size_t> dist(vertex_num_, vertex_num_);
   dist[root->number] = 0;
-  
+
   std::queue<std::shared_ptr<Vertex>> queue;
   queue.push(root);
 
@@ -54,4 +58,35 @@ std::vector<size_t> GraphVisualizator::BFS(std::shared_ptr<Vertex> root) {
   }
 
   return dist;
+}
+
+std::vector<std::vector<std::shared_ptr<Vertex>>>
+GraphVisualizator::CreateVertexFiltration() {
+  std::vector<std::vector<std::shared_ptr<Vertex>>> filtration{graph_};
+
+  std::srand(std::time(NULL));
+  while (true) {
+    std::vector<std::shared_ptr<Vertex>> predecessor = filtration.back();
+    std::vector<std::shared_ptr<Vertex>> successor;
+
+    while (!predecessor.empty()) {
+      auto vertex = predecessor[std::rand() % predecessor.size()];
+      successor.push_back(vertex);
+
+      std::vector<size_t> dist = BFS(vertex);
+      for (size_t i = 0; i < vertex_num_; ++i) {
+        if (dist[i] > std::pow(2, (filtration.size() - 1))) { continue; }
+
+        predecessor.erase(
+            std::remove_if(predecessor.begin(), predecessor.end(),
+                           [&i](auto const& v) { return v->number == i; }),
+            predecessor.end());
+      }
+    }
+
+    if (successor == filtration.back()) { break; }
+    filtration.push_back(successor);
+  }
+
+  return filtration;
 }
