@@ -3,7 +3,18 @@
 
 #include <string>
 #include <vector>
+#include <memory>
+#include <cstdint>
 #include <utility>
+
+struct Vertex {
+  Vertex(size_t _number) { number = _number; }
+
+  size_t number;
+  size_t x;
+  size_t y;
+  std::vector<std::shared_ptr<Vertex>> neighbours;
+};
 
 class GraphVisualizator {
 public:
@@ -14,7 +25,7 @@ public:
 private:
   size_t vertex_num_ = 0;
   size_t edge_num_ = 0;
-  std::vector<std::vector<size_t>> graph_;
+  std::vector<std::shared_ptr<Vertex>> graph_;
 };
 
 #endif  // GRAPHVISUALIZATION_HEADER_GRAPH_VISUALIZATOR_H_
