@@ -4,6 +4,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <queue>
 #include <memory>
 
 void GraphVisualizator::ReadGraph(const std::string& filename) {
@@ -31,4 +32,26 @@ void GraphVisualizator::ReadGraph(const std::string& filename) {
   input.close();
 
   graph_ = graph;
+}
+
+std::vector<size_t> GraphVisualizator::BFS(std::shared_ptr<Vertex> root) {
+  std::vector<size_t> dist(vertex_num_, vertex_num_);
+  dist[root->number] = 0;
+  
+  std::queue<std::shared_ptr<Vertex>> queue;
+  queue.push(root);
+
+  while (!queue.empty()) {
+    std::shared_ptr<Vertex> vertex = queue.front();
+    queue.pop();
+
+    for (auto neighbour : vertex->neighbours) {
+      if (dist[neighbour->number] > dist[vertex->number] + 1) {
+        dist[neighbour->number] = dist[vertex->number] + 1;
+        queue.push(neighbour);
+      }
+    }
+  }
+
+  return dist;
 }

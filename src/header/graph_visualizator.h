@@ -21,6 +21,7 @@ public:
   GraphVisualizator() = default;
 
   void ReadGraph(const std::string& filename);
+  std::vector<size_t> BFS(std::shared_ptr<Vertex> root);
 
 private:
   size_t vertex_num_ = 0;
