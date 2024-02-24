@@ -1,12 +1,12 @@
 #ifndef GRAPHVISUALIZATION_HEADER_GRAPH_VISUALIZATOR_H_
 #define GRAPHVISUALIZATION_HEADER_GRAPH_VISUALIZATOR_H_
 
-#include <string>
-#include <vector>
+#include <cstdint>
 #include <deque>
 #include <memory>
-#include <cstdint>
+#include <string>
 #include <utility>
+#include <vector>
 
 struct Vertex {
   Vertex(size_t _number) { number = _number; }
@@ -22,14 +22,14 @@ public:
   GraphVisualizator() = default;
 
   void ReadGraph(const std::string& filename);
+
+private:
   std::vector<size_t> BFS(std::shared_ptr<Vertex> root);
   std::vector<size_t> CreateVertexFiltration();
 
-  std::vector<std::shared_ptr<Vertex>> graph_;
-
-private:
   size_t vertex_num_ = 0;
   size_t edge_num_ = 0;
+  std::vector<std::shared_ptr<Vertex>> graph_;
 };
 
 #endif  // GRAPHVISUALIZATION_HEADER_GRAPH_VISUALIZATOR_H_

@@ -1,16 +1,16 @@
 #include "header/graph_visualizator.h"
 
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <vector>
-#include <queue>
-#include <deque>
-#include <memory>
+#include <algorithm>
 #include <cstdlib>
 #include <ctime>
 #include <cmath>
-#include <algorithm>
+#include <deque>
+#include <fstream>
+#include <iostream>
+#include <memory>
+#include <queue>
+#include <string>
+#include <vector>
 
 void GraphVisualizator::ReadGraph(const std::string& filename) {
   std::ifstream input(filename);
@@ -50,7 +50,7 @@ std::vector<size_t> GraphVisualizator::BFS(std::shared_ptr<Vertex> root) {
     std::shared_ptr<Vertex> vertex = queue.front();
     queue.pop();
 
-    for (auto neighbour : vertex->neighbours) {
+    for (const auto& neighbour : vertex->neighbours) {
       if (dist[neighbour->number] > dist[vertex->number] + 1) {
         dist[neighbour->number] = dist[vertex->number] + 1;
         queue.push(neighbour);
