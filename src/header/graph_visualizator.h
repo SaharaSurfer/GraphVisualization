@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <deque>
 #include <memory>
 #include <cstdint>
 #include <utility>
@@ -22,12 +23,13 @@ public:
 
   void ReadGraph(const std::string& filename);
   std::vector<size_t> BFS(std::shared_ptr<Vertex> root);
-  std::vector<std::vector<std::shared_ptr<Vertex>>> CreateVertexFiltration();
+  std::vector<size_t> CreateVertexFiltration();
+
+  std::vector<std::shared_ptr<Vertex>> graph_;
 
 private:
   size_t vertex_num_ = 0;
   size_t edge_num_ = 0;
-  std::vector<std::shared_ptr<Vertex>> graph_;
 };
 
 #endif  // GRAPHVISUALIZATION_HEADER_GRAPH_VISUALIZATOR_H_

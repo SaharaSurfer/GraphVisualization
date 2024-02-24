@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <queue>
+#include <deque>
 #include <memory>
 #include <cstdlib>
 #include <ctime>
@@ -60,45 +61,57 @@ std::vector<size_t> GraphVisualizator::BFS(std::shared_ptr<Vertex> root) {
   return dist;
 }
 
-std::vector<std::vector<std::shared_ptr<Vertex>>>
-GraphVisualizator::CreateVertexFiltration() {
-  std::vector<std::vector<std::shared_ptr<Vertex>>> filtration{graph_};
+std::vector<size_t> GraphVisualizator::CreateVertexFiltration() {
+  std::deque<std::shared_ptr<Vertex>> filtration(graph_.begin(), graph_.end());
+  std::vector<size_t> borders{vertex_num_};
 
   int debug = 1000;
 
   std::srand(std::time(NULL));
-  while (filtration.back().size() > 3) {
-    std::vector<std::shared_ptr<Vertex>> predecessor = filtration.back();
-    std::vector<std::shared_ptr<Vertex>> successor;
+  while (borders.back() != 3) {
+    std::deque<std::shared_ptr<Vertex>> predecessor = filtration;
+    predecessor.resize(borders.back());
+    std::deque<std::shared_ptr<Vertex>> successor;
 
+    size_t successor_size = 0;
     while (!predecessor.empty()) {
       auto vertex = predecessor[std::rand() % predecessor.size()];
-      successor.push_back(vertex);
+      successor.push_front(vertex);
+      ++successor_size;
 
       std::vector<size_t> dist = BFS(vertex);
-      for (size_t i = 0; i < vertex_num_; ++i) {
-        if (dist[i] > std::pow(2, (filtration.size() - 1))) { continue; }
-
-        predecessor.erase(
-            std::remove_if(predecessor.begin(), predecessor.end(),
-                           [&i](auto const& v) { return v->number == i; }),
-            predecessor.end());
+      auto it = predecessor.begin();
+      while (it != predecessor.end()) {
+        auto v = *it;
+  
+        if (dist[v->number] <= std::pow(2, (borders.size() - 1))) {
+          successor.push_back(v);
+          it = predecessor.erase(it);
+        } else {
+          ++it;
+        }
       }
     }
     
-    if (successor.size() < 3) {
+    if (successor_size < 3) {
       debug -= 1;
 
       if (debug == 0) {
         debug = 1000;
-        filtration.pop_back();
+        borders.pop_back();
       }
 
       continue;
     }
 
-    filtration.push_back(successor);
+    for (size_t i = 0; i < borders.back(); ++i) {
+      filtration[i] = successor[i];
+    }
+    borders.push_back(successor_size);
   }
 
-  return filtration;
+  graph_ = std::vector<std::shared_ptr<Vertex>>(filtration.begin(),
+                                                filtration.end());
+  std::reverse(borders.begin(), borders.end());
+  return borders;
 }
