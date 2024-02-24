@@ -65,10 +65,11 @@ std::vector<size_t> GraphVisualizator::CreateVertexFiltration() {
   std::deque<std::shared_ptr<Vertex>> filtration(graph_.begin(), graph_.end());
   std::vector<size_t> borders{vertex_num_};
 
-  int debug = 1000;
+  const size_t kLastSetSize = 3;
+  size_t repeat_before_reset = 1000;
 
   std::srand(std::time(NULL));
-  while (borders.back() != 3) {
+  while (borders.back() != kLastSetSize) {
     std::deque<std::shared_ptr<Vertex>> predecessor = filtration;
     predecessor.resize(borders.back());
     std::deque<std::shared_ptr<Vertex>> successor;
@@ -93,11 +94,11 @@ std::vector<size_t> GraphVisualizator::CreateVertexFiltration() {
       }
     }
     
-    if (successor_size < 3) {
-      debug -= 1;
+    if (successor_size < kLastSetSize) {
+      repeat_before_reset -= 1;
 
-      if (debug == 0) {
-        debug = 1000;
+      if (repeat_before_reset == 0) {
+        repeat_before_reset = 1000;
         borders.pop_back();
       }
 
