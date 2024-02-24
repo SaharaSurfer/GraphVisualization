@@ -8,6 +8,7 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <numeric>
 #include <queue>
 #include <string>
 #include <vector>
@@ -65,11 +66,10 @@ std::vector<size_t> GraphVisualizator::CreateVertexFiltration() {
   std::deque<std::shared_ptr<Vertex>> filtration(graph_.begin(), graph_.end());
   std::vector<size_t> borders{vertex_num_};
 
-  const size_t kLastSetSize = 3;
   size_t repeat_before_reset = 1000;
 
   std::srand(std::time(NULL));
-  while (borders.back() != kLastSetSize) {
+  while (borders.back() != kLastSetSize_) {
     std::deque<std::shared_ptr<Vertex>> predecessor = filtration;
     predecessor.resize(borders.back());
     std::deque<std::shared_ptr<Vertex>> successor;
@@ -84,7 +84,7 @@ std::vector<size_t> GraphVisualizator::CreateVertexFiltration() {
       auto it = predecessor.begin();
       while (it != predecessor.end()) {
         auto v = *it;
-  
+
         if (dist[v->number] <= std::pow(2, (borders.size() - 1))) {
           successor.push_back(v);
           it = predecessor.erase(it);
@@ -94,7 +94,7 @@ std::vector<size_t> GraphVisualizator::CreateVertexFiltration() {
       }
     }
     
-    if (successor_size < kLastSetSize) {
+    if (successor_size < kLastSetSize_) {
       repeat_before_reset -= 1;
 
       if (repeat_before_reset == 0) {
@@ -115,4 +115,30 @@ std::vector<size_t> GraphVisualizator::CreateVertexFiltration() {
                                                 filtration.end());
   std::reverse(borders.begin(), borders.end());
   return borders;
+}
+
+void GraphVisualizator::PlaceCoreVertices() {
+  std::vector<size_t> triangle_dist(kLastSetSize_, 0); // 1-2, 2-3, 3-1
+
+  std::vector<size_t> dist = BFS(graph_[0]);
+  triangle_dist[0] = dist[graph_[1]->number];
+  triangle_dist[2] = dist[graph_[2]->number];
+
+  dist = BFS(graph_[1]);
+  triangle_dist[1] = dist[graph_[2]->number];
+
+  graph_[1]->x = dist[0];
+
+  const double kHalfPerimeter = std::reduce(triangle_dist.begin(), 
+                                      triangle_dist.end()) / 2;
+  const double kArea = std::sqrt(kHalfPerimeter * 
+                           (kHalfPerimeter - triangle_dist[0]) *
+                           (kHalfPerimeter - triangle_dist[1]) * 
+                           (kHalfPerimeter - triangle_dist[2]));
+  const double kHeight = (kArea / triangle_dist[0]) * 2;
+  const double kXCord = std::sqrt(std::pow(triangle_dist[2], 2) - 
+                                  std::pow(kHeight, 2));
+
+  graph_[2]->x = std::round(kXCord);
+  graph_[2]->y = std::round(kHeight);
 }
