@@ -23,11 +23,13 @@ void GraphVisualizator::ReadGraph(const std::string& filename) {
   
   input >> vertex_num_ >> edge_num_;
   
+  // Create and initialize vertices for the graph
   std::vector<std::shared_ptr<Vertex>> graph(vertex_num_, nullptr);
   for (size_t i = 0; i < vertex_num_; ++i) {
     graph[i] = std::make_shared<Vertex>(i);
   }
 
+  // Read the edges from the file and update the adjacency lists of the vertices
   for (size_t i = 0; i < edge_num_; ++i) {
     size_t ind_1, ind_2;
     input >> ind_1 >> ind_2;
@@ -52,6 +54,7 @@ std::vector<size_t> GraphVisualizator::BFS(std::shared_ptr<Vertex> root) {
     std::shared_ptr<Vertex> vertex = queue.front();
     queue.pop();
 
+    // Traverse the neighbors of the current vertex
     for (const auto& neighbour : vertex->neighbours) {
       if (dist[neighbour->number] > dist[vertex->number] + 1) {
         dist[neighbour->number] = dist[vertex->number] + 1;
@@ -63,6 +66,8 @@ std::vector<size_t> GraphVisualizator::BFS(std::shared_ptr<Vertex> root) {
   return dist;
 }
 
+// Randomly selects vertices to fill the new filter set, 
+// removing those that are a small distance away in the graph.
 std::vector<size_t> GraphVisualizator::CreateVertexFiltration() {
   std::deque<std::shared_ptr<Vertex>> filtration(graph_.begin(), graph_.end());
   std::vector<size_t> borders{vertex_num_};
@@ -70,13 +75,14 @@ std::vector<size_t> GraphVisualizator::CreateVertexFiltration() {
   size_t repeat_before_reset = kRepeatBeforeReset_;
 
   std::mt19937 gen(std::time(nullptr));
-  while (borders.back() != kNeighbourNumber_) {
+  while (borders.back() != kCoreVertexNumber_) {
     std::deque<std::shared_ptr<Vertex>> predecessor = filtration;
     predecessor.resize(borders.back());
 
     std::deque<std::shared_ptr<Vertex>> successor;
     size_t successor_size = 0;
 
+    // Randomly select vertices for the successor set
     while (!predecessor.empty()) {
       std::uniform_int_distribution<> distribution(0, predecessor.size() - 1);
       size_t rand_ind = distribution(gen);
@@ -87,6 +93,8 @@ std::vector<size_t> GraphVisualizator::CreateVertexFiltration() {
       ++successor_size;
 
       std::vector<size_t> dist = BFS(vertex);
+
+      // Filter predecessor set based on distances
       auto it = predecessor.begin();
       while (it != predecessor.end()) {
         auto v = *it;
@@ -100,7 +108,8 @@ std::vector<size_t> GraphVisualizator::CreateVertexFiltration() {
       }
     }
     
-    if (successor_size < kNeighbourNumber_) {
+    // Check if the successor set meets the filtration requirements
+    if (successor_size < kCoreVertexNumber_) {
       if (--repeat_before_reset == kResetThreshhold_) {
         repeat_before_reset = kRepeatBeforeReset_;
         borders.pop_back();
@@ -108,20 +117,24 @@ std::vector<size_t> GraphVisualizator::CreateVertexFiltration() {
       continue;
     }
 
+    // Update the filtration with the successor set
     for (size_t i = 0; i < borders.back(); ++i) {
       filtration[i] = successor[i];
     }
     borders.push_back(successor_size);
   }
 
+  // Update the graph with the final filtration result
   graph_ = std::vector<std::shared_ptr<Vertex>>(filtration.begin(),
                                                 filtration.end());
   std::reverse(borders.begin(), borders.end());
   return borders;
 }
 
+// It uses BFS to compute distances between vertices and geometric
+// properties of triangles to determine the coordinates of the vertices.
 void GraphVisualizator::PlaceCoreVertices() {
-  std::vector<size_t> triangle_dist(kNeighbourNumber_, 0); // 1-2, 2-3, 3-1
+  std::vector<size_t> triangle_dist(kCoreVertexNumber_, 0);
 
   std::vector<size_t> dist = BFS(graph_[0]);
   triangle_dist[0] = dist[graph_[1]->number];
@@ -134,10 +147,13 @@ void GraphVisualizator::PlaceCoreVertices() {
 
   const double kHalfPerimeter = std::reduce(triangle_dist.begin(), 
                                             triangle_dist.end(), 0.0) / 2;
+  
+  // Heron’s formula
   const double kArea = std::sqrt(kHalfPerimeter * 
                                  (kHalfPerimeter - triangle_dist[0]) *
                                  (kHalfPerimeter - triangle_dist[1]) * 
                                  (kHalfPerimeter - triangle_dist[2]));
+  
   const double kHeight = (kArea / triangle_dist[0]) * 2;
   const double kXCord = std::sqrt(std::pow(triangle_dist[2], 2) - 
                                   std::pow(kHeight, 2));
