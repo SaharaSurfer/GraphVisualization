@@ -12,8 +12,8 @@ struct Vertex {
   Vertex(size_t _number) { number = _number; }
 
   size_t number;
-  size_t x;
-  size_t y;
+  double x;
+  double y;
   std::vector<std::shared_ptr<Vertex>> neighbours;
 };
 
@@ -32,7 +32,10 @@ private:
   size_t edge_num_ = 0;
   std::vector<std::shared_ptr<Vertex>> graph_;
 
-  const size_t kLastSetSize_ = 3;
+  const size_t kEdgeLen_ = 30;
+  const size_t kNeighbourNumber_ = 3;
+  const size_t kRepeatBeforeReset_ = 1000;
+  const size_t kResetThreshhold_ = 0;
 };
 
 #endif  // GRAPHVISUALIZATION_HEADER_GRAPH_VISUALIZATOR_H_

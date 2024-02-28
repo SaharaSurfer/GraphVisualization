@@ -10,6 +10,7 @@
 #include <memory>
 #include <numeric>
 #include <queue>
+#include <random>
 #include <string>
 #include <vector>
 
@@ -66,18 +67,23 @@ std::vector<size_t> GraphVisualizator::CreateVertexFiltration() {
   std::deque<std::shared_ptr<Vertex>> filtration(graph_.begin(), graph_.end());
   std::vector<size_t> borders{vertex_num_};
 
-  size_t repeat_before_reset = 1000;
+  size_t repeat_before_reset = kRepeatBeforeReset_;
 
-  std::srand(std::time(NULL));
-  while (borders.back() != kLastSetSize_) {
+  std::mt19937 gen(std::time(nullptr));
+  while (borders.back() != kNeighbourNumber_) {
     std::deque<std::shared_ptr<Vertex>> predecessor = filtration;
     predecessor.resize(borders.back());
-    std::deque<std::shared_ptr<Vertex>> successor;
 
+    std::deque<std::shared_ptr<Vertex>> successor;
     size_t successor_size = 0;
+
     while (!predecessor.empty()) {
-      auto vertex = predecessor[std::rand() % predecessor.size()];
+      std::uniform_int_distribution<> distribution(0, predecessor.size() - 1);
+      size_t rand_ind = distribution(gen);
+      auto vertex = predecessor[rand_ind];
+      
       successor.push_front(vertex);
+      predecessor.erase(predecessor.begin() + rand_ind);
       ++successor_size;
 
       std::vector<size_t> dist = BFS(vertex);
@@ -94,14 +100,11 @@ std::vector<size_t> GraphVisualizator::CreateVertexFiltration() {
       }
     }
     
-    if (successor_size < kLastSetSize_) {
-      repeat_before_reset -= 1;
-
-      if (repeat_before_reset == 0) {
-        repeat_before_reset = 1000;
+    if (successor_size < kNeighbourNumber_) {
+      if (--repeat_before_reset == kResetThreshhold_) {
+        repeat_before_reset = kRepeatBeforeReset_;
         borders.pop_back();
       }
-
       continue;
     }
 
@@ -118,7 +121,7 @@ std::vector<size_t> GraphVisualizator::CreateVertexFiltration() {
 }
 
 void GraphVisualizator::PlaceCoreVertices() {
-  std::vector<size_t> triangle_dist(kLastSetSize_, 0); // 1-2, 2-3, 3-1
+  std::vector<size_t> triangle_dist(kNeighbourNumber_, 0); // 1-2, 2-3, 3-1
 
   std::vector<size_t> dist = BFS(graph_[0]);
   triangle_dist[0] = dist[graph_[1]->number];
@@ -130,15 +133,15 @@ void GraphVisualizator::PlaceCoreVertices() {
   graph_[1]->x = dist[0];
 
   const double kHalfPerimeter = std::reduce(triangle_dist.begin(), 
-                                      triangle_dist.end()) / 2;
+                                            triangle_dist.end(), 0.0) / 2;
   const double kArea = std::sqrt(kHalfPerimeter * 
-                           (kHalfPerimeter - triangle_dist[0]) *
-                           (kHalfPerimeter - triangle_dist[1]) * 
-                           (kHalfPerimeter - triangle_dist[2]));
+                                 (kHalfPerimeter - triangle_dist[0]) *
+                                 (kHalfPerimeter - triangle_dist[1]) * 
+                                 (kHalfPerimeter - triangle_dist[2]));
   const double kHeight = (kArea / triangle_dist[0]) * 2;
   const double kXCord = std::sqrt(std::pow(triangle_dist[2], 2) - 
                                   std::pow(kHeight, 2));
 
-  graph_[2]->x = std::round(kXCord);
-  graph_[2]->y = std::round(kHeight);
+  graph_[2]->x = kXCord;
+  graph_[2]->y = kHeight;
 }
