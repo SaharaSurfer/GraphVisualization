@@ -66,8 +66,11 @@ std::vector<size_t> GraphVisualizator::BFS(std::shared_ptr<Vertex> root) {
   return dist;
 }
 
-// Randomly selects vertices to fill the new filter set, 
-// removing those that are a small distance away in the graph.
+// By using deque at each step, it is possible to make the elements
+// of V_i in front and V_{i - 1} \ V_i at the end of successor.
+// This allows us to store the filtering in a single vector, also storing
+// a vector of indices showing the boundaries of the sets of V_i.
+// In this case, the |V_i| points to the end of V_i inside the filtration.
 std::vector<size_t> GraphVisualizator::CreateVertexFiltration() {
   std::deque<std::shared_ptr<Vertex>> filtration(graph_.begin(), graph_.end());
   std::vector<size_t> borders{vertex_num_};
