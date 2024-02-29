@@ -85,12 +85,13 @@ std::vector<size_t> GraphVisualizator::CreateVertexFiltration() {
     std::deque<std::shared_ptr<Vertex>> successor;
     size_t successor_size = 0;
 
-    // Randomly select vertices for the successor set
     while (!predecessor.empty()) {
+      // Randomly select vertex for the successor set
       std::uniform_int_distribution<> distribution(0, predecessor.size() - 1);
       size_t rand_ind = distribution(gen);
       auto vertex = predecessor[rand_ind];
       
+      // Move from the auxiliary deque to the beginning of a new permutation
       successor.push_front(vertex);
       predecessor.erase(predecessor.begin() + rand_ind);
       ++successor_size;
@@ -102,6 +103,8 @@ std::vector<size_t> GraphVisualizator::CreateVertexFiltration() {
       while (it != predecessor.end()) {
         auto v = *it;
 
+        // Move the vertices that are at the desired distance
+        // at the end of the permutation.
         if (dist[v->number] <= std::pow(2, (borders.size() - 1))) {
           successor.push_back(v);
           it = predecessor.erase(it);
