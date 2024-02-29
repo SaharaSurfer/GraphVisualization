@@ -139,6 +139,7 @@ std::vector<size_t> GraphVisualizator::CreateVertexFiltration() {
 void GraphVisualizator::PlaceCoreVertices() {
   std::vector<size_t> triangle_dist(kCoreVertexNumber_, 0);
 
+  // Find the sides of the triangle
   std::vector<size_t> dist = BFS(graph_[0]);
   triangle_dist[0] = dist[graph_[1]->number];
   triangle_dist[2] = dist[graph_[2]->number];
@@ -146,8 +147,14 @@ void GraphVisualizator::PlaceCoreVertices() {
   dist = BFS(graph_[1]);
   triangle_dist[1] = dist[graph_[2]->number];
 
+  // Set the second vertex at a distance dist[0] from the first vertex
+  // located in (0, 0) so that it is possible to determine 
+  // the coordinate of the last vertex.
   graph_[1]->x = dist[0];
 
+
+  // Find the coordinates of the last vertex using the height
+  // drawn to the edge connecting 1 and 2 vertices.
   const double kHalfPerimeter = std::reduce(triangle_dist.begin(), 
                                             triangle_dist.end(), 0.0) / 2;
   
