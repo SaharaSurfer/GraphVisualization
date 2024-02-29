@@ -34,6 +34,11 @@ void GraphVisualizator::ReadGraph(const std::string& filename) {
     size_t ind_1, ind_2;
     input >> ind_1 >> ind_2;
 
+    // Check if the indices are valid
+    if (ind_1 < 1 || ind_1 > vertex_num_ || ind_2 < 1 || ind_2 > vertex_num_) {
+      throw std::runtime_error("Invalid vertex index in edge definition");
+    }
+
     graph[ind_1 - 1]->neighbours.push_back(graph[ind_2 - 1]);
     graph[ind_2 - 1]->neighbours.push_back(graph[ind_1 - 1]);
   }
@@ -44,6 +49,9 @@ void GraphVisualizator::ReadGraph(const std::string& filename) {
 }
 
 std::vector<size_t> GraphVisualizator::BFS(std::shared_ptr<Vertex> root) {
+  // Since the distance in the graph between 2 vertices cannot be greater
+  // than vertex_num_ - 1, the value of vertex_num_ can be used
+  // to initialise unreachability.
   std::vector<size_t> dist(vertex_num_, vertex_num_);
   dist[root->number] = 0;
 
@@ -56,6 +64,7 @@ std::vector<size_t> GraphVisualizator::BFS(std::shared_ptr<Vertex> root) {
 
     // Traverse the neighbors of the current vertex
     for (const auto& neighbour : vertex->neighbours) {
+      // Update distance if shorter path found
       if (dist[neighbour->number] > dist[vertex->number] + 1) {
         dist[neighbour->number] = dist[vertex->number] + 1;
         queue.push(neighbour);
@@ -72,12 +81,18 @@ std::vector<size_t> GraphVisualizator::BFS(std::shared_ptr<Vertex> root) {
 // a vector of indices showing the boundaries of the sets of V_i.
 // In this case, the |V_i| points to the end of V_i inside the filtration.
 std::vector<size_t> GraphVisualizator::CreateVertexFiltration() {
+  // Ensure the graph is not empty
+  if (graph_.empty()) {
+    throw std::invalid_argument("Graph is empty");
+  }
+  
   std::deque<std::shared_ptr<Vertex>> filtration(graph_.begin(), graph_.end());
   std::vector<size_t> borders{vertex_num_};
 
-  size_t repeat_before_reset = kRepeatBeforeReset_;
-
   std::mt19937 gen(std::time(nullptr));
+
+  // Main loop for creating the filtration
+  size_t repeat_before_reset = kRepeatBeforeReset_;
   while (borders.back() != kCoreVertexNumber_) {
     std::deque<std::shared_ptr<Vertex>> predecessor = filtration;
     predecessor.resize(borders.back());
@@ -85,6 +100,7 @@ std::vector<size_t> GraphVisualizator::CreateVertexFiltration() {
     std::deque<std::shared_ptr<Vertex>> successor;
     size_t successor_size = 0;
 
+    // Loop for selecting vertices for the successor set
     while (!predecessor.empty()) {
       // Randomly select vertex for the successor set
       std::uniform_int_distribution<> distribution(0, predecessor.size() - 1);
@@ -93,6 +109,11 @@ std::vector<size_t> GraphVisualizator::CreateVertexFiltration() {
 
       // Update the vertex depth
       ++vertex->depth;
+
+      // Check if the vertex depth is within bounds
+      if (vertex->depth >= borders.size()) {
+        throw std::runtime_error("Vertex depth exceeds borders size");
+      }
       
       // Move from the auxiliary deque to the beginning of a new permutation
       successor.push_front(vertex);
@@ -143,6 +164,11 @@ std::vector<size_t> GraphVisualizator::CreateVertexFiltration() {
 // It uses BFS to compute distances between vertices and geometric
 // properties of triangles to determine the coordinates of the vertices.
 void GraphVisualizator::PlaceCoreVertices() {
+  // Ensure the graph has at least kCoreVertexNumber_ vertices
+  if (graph_.size() < kCoreVertexNumber_) {
+    throw std::runtime_error("Insufficient vertices in the graph");
+  }
+
   std::vector<size_t> triangle_dist(kCoreVertexNumber_, 0);
 
   // Find the sides of the triangle
@@ -158,7 +184,6 @@ void GraphVisualizator::PlaceCoreVertices() {
   // the coordinate of the last vertex.
   graph_[1]->x = dist[0];
 
-
   // Find the coordinates of the last vertex using the height
   // drawn to the edge connecting 1 and 2 vertices.
   const double kHalfPerimeter = std::reduce(triangle_dist.begin(), 
@@ -170,6 +195,11 @@ void GraphVisualizator::PlaceCoreVertices() {
                                  (kHalfPerimeter - triangle_dist[1]) * 
                                  (kHalfPerimeter - triangle_dist[2]));
   
+  // Ensure the triangle is not degenerate
+  if (kArea <= 0) {
+    throw std::runtime_error("Degenerate triangle: area is non-positive");
+  }
+
   const double kHeight = (kArea / triangle_dist[0]) * 2;
   const double kXCord = std::sqrt(std::pow(triangle_dist[2], 2) - 
                                   std::pow(kHeight, 2));
