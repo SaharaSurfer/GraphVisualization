@@ -15,9 +15,12 @@ struct Vertex {
   Vertex(size_t _number) { number = _number; }
 
   size_t number;
-  double x;
-  double y;
+  double x = 0.0;
+  double y = 0.0;
   std::vector<std::shared_ptr<Vertex>> neighbours;
+  
+  // The highest number of the filtration set that contains the given vertex.
+  int depth = 0;
 };
 
 // GraphVisualizator class is responsible for visualizing graphs.

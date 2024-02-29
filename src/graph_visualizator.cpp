@@ -90,6 +90,9 @@ std::vector<size_t> GraphVisualizator::CreateVertexFiltration() {
       std::uniform_int_distribution<> distribution(0, predecessor.size() - 1);
       size_t rand_ind = distribution(gen);
       auto vertex = predecessor[rand_ind];
+
+      // Update the vertex depth
+      ++vertex->depth;
       
       // Move from the auxiliary deque to the beginning of a new permutation
       successor.push_front(vertex);
@@ -133,7 +136,7 @@ std::vector<size_t> GraphVisualizator::CreateVertexFiltration() {
   // Update the graph with the final filtration result
   graph_ = std::vector<std::shared_ptr<Vertex>>(filtration.begin(),
                                                 filtration.end());
-  std::reverse(borders.begin(), borders.end());
+  
   return borders;
 }
 
