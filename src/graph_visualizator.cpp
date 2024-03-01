@@ -106,14 +106,6 @@ std::vector<size_t> GraphVisualizator::CreateVertexFiltration() {
       std::uniform_int_distribution<> distribution(0, predecessor.size() - 1);
       size_t rand_ind = distribution(gen);
       auto vertex = predecessor[rand_ind];
-
-      // Update the vertex depth
-      ++vertex->depth;
-
-      // Check if the vertex depth is within bounds
-      if (vertex->depth >= borders.size()) {
-        throw std::runtime_error("Vertex depth exceeds borders size");
-      }
       
       // Move from the auxiliary deque to the beginning of a new permutation
       successor.push_front(vertex);
@@ -129,7 +121,8 @@ std::vector<size_t> GraphVisualizator::CreateVertexFiltration() {
 
         // Move the vertices that are at the desired distance
         // at the end of the permutation.
-        if (dist[v->number] <= std::pow(2, (borders.size() - 1))) {
+        if (dist[v->number] != vertex_num_ && 
+            dist[v->number] <= std::pow(2, (borders.size() - 1))) {
           successor.push_back(v);
           it = predecessor.erase(it);
         } else {
@@ -142,6 +135,11 @@ std::vector<size_t> GraphVisualizator::CreateVertexFiltration() {
     if (successor_size < kCoreVertexNumber_) {
       if (--repeat_before_reset == kResetThreshhold_) {
         repeat_before_reset = kRepeatBeforeReset_;
+
+        for (size_t i = 0; i < borders.back(); ++i) {
+          --filtration[i]->depth;
+        }
+
         borders.pop_back();
       }
       continue;
@@ -150,6 +148,11 @@ std::vector<size_t> GraphVisualizator::CreateVertexFiltration() {
     // Update the filtration with the successor set
     for (size_t i = 0; i < borders.back(); ++i) {
       filtration[i] = successor[i];
+      
+      // Update the depth of vertex
+      if (i < successor_size) {
+        filtration[i]->depth = borders.size();
+      }
     }
     borders.push_back(successor_size);
   }
@@ -159,6 +162,67 @@ std::vector<size_t> GraphVisualizator::CreateVertexFiltration() {
                                                 filtration.end());
   
   return borders;
+}
+
+std::vector<std::vector<std::shared_ptr<Vertex>>>
+GraphVisualizator::FindNearestNeighbourSets(const std::vector<size_t>& borders,
+                                            std::shared_ptr<Vertex> root) {
+  // Ensure the graph is not empty
+  if (graph_.empty()) {
+    throw std::invalid_argument("Graph is empty");
+  }
+
+  // Find average degree of vertices in the graph
+  double avg_degree = 0.0;
+  for (const auto& vertex : graph_) {
+    avg_degree += vertex->neighbours.size();
+  }
+  avg_degree = std::round(avg_degree / vertex_num_);
+
+  // Validate input borders
+  if (borders.size() < root->depth + 1) {
+    throw std::invalid_argument("Invalid borders size");
+  }
+
+  // Find the size of the neighbourhoods
+  std::vector<size_t> neighbourhood_size(root->depth + 1);
+  for (size_t i = 0; i < root->depth + 1; ++i) {
+    neighbourhood_size[i] = avg_degree * vertex_num_ / borders[i];
+    neighbourhood_size[i] = std::min(neighbourhood_size[i], borders[i] - 1);
+  }
+
+  std::vector<std::vector<std::shared_ptr<Vertex>>>
+  neighbourhoods(root->depth + 1);
+
+  // Traverse the graph using BFS to find neighbourhoods
+  std::vector<size_t> visited(vertex_num_, 0);  // 0 - unvisited
+  std::queue<std::shared_ptr<Vertex>> queue;
+  
+  queue.push(root);
+  while (!queue.empty()) {
+    std::shared_ptr<Vertex> vertex = queue.front();
+    queue.pop();
+
+    visited[vertex->number] = 2;  // 2 - visited
+
+    // Traverse the neighbors of the current vertex
+    for (const auto& neighbour : vertex->neighbours) {
+      if (visited[neighbour->number] > 0) { continue; }
+      visited[neighbour->number] = 1;  // 1 - viewed
+
+      // Traverse through depths to assign neighbours to appropriate sets
+      for (size_t d = 0; d <= neighbour->depth; ++d) {
+        // Check if the neighbourhood size for the current depth is reached
+        if (neighbourhoods[d].size() == neighbourhood_size[d]) { continue; }
+
+        neighbourhoods[d].push_back(neighbour);
+      }
+
+      queue.push(neighbour);
+    }
+  }
+
+  return neighbourhoods;
 }
 
 // It uses BFS to compute distances between vertices and geometric

@@ -56,6 +56,16 @@ private:
   // - a vector containing the sizes of each filtration stage
   std::vector<size_t> CreateVertexFiltration();
 
+  // Finds sets of nearest neighbors of a graph vertex for each filter set.
+  // Parameters:
+  //   - borders: A vector containing the boundaries of each filter set.
+  //   - root: The root vertex from which to start the search.
+  // Returns:
+  // A vector of vectors containing the nearest neighbor sets for each filter set.
+  std::vector<std::vector<std::shared_ptr<Vertex>>>
+  FindNearestNeighbourSets(const std::vector<size_t>& borders,
+                           std::shared_ptr<Vertex> root);
+
   // PlaceCoreVertices function calculates the positions of 
   // core vertices in the graph.
   void PlaceCoreVertices();
