@@ -70,6 +70,16 @@ private:
   // core vertices in the graph.
   void PlaceCoreVertices();
 
+  // Finds the three nearest vertices to a given root vertex in the graph.
+  // Parameters:
+  //   - borders: A vector containing the boundaries of each filter set.
+  //   - root: The root vertex from which to start the search.
+  // Returns:
+  // A vector of pairs containing the distance to root and the index in graph_.
+  std::vector<std::pair<size_t, size_t>>
+  FindThreeNearestVertices(const std::vector<size_t>& borders,
+                           std::shared_ptr<Vertex> root);
+
   size_t vertex_num_ = 0;
   size_t edge_num_ = 0;
   std::vector<std::shared_ptr<Vertex>> graph_;

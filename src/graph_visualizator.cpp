@@ -271,3 +271,51 @@ void GraphVisualizator::PlaceCoreVertices() {
   graph_[2]->x = kXCord;
   graph_[2]->y = kHeight;
 }
+
+// Uses a priority queue to find the closest 
+// vertices based on their distances.
+std::vector<std::pair<size_t, size_t>>
+GraphVisualizator::FindThreeNearestVertices(const std::vector<size_t>& borders,
+                                            std::shared_ptr<Vertex> root) {
+  // Ensure the graph has enough vertices
+  if (graph_.size() < 4) {
+    throw std::invalid_argument("Graph does not have enough vertices");
+  }
+
+  // Perform BFS to compute distances from the root vertex
+  std::vector<size_t> distances = BFS(root);
+
+  // Custom comparator for the priority queue
+  auto comparator = [](const std::pair<size_t, size_t>& a,
+                       const std::pair<size_t, size_t>& b) {
+    return a.first < b.first;  // Compare distances in descending order
+  };
+
+  // Use a priority queue to find the three closest vertices
+  std::priority_queue<std::pair<size_t, size_t>, 
+                      std::vector<std::pair<size_t, size_t>>,
+                      decltype(comparator)> closest_3(comparator);
+
+  // Going over the vertices with more depth, as
+  // these are the ones that have already been placed
+  for (size_t i = 0; i < borders[root->depth + 1]; ++i) {
+    closest_3.push({distances[graph_[i]->number], i});
+    if (closest_3.size() > 3) {
+      closest_3.pop();  // Maintain only the top 3 closest vertices
+    }
+  }
+
+  // Extract the closest vertices from the priority queue
+  std::vector<std::pair<size_t, size_t>> triangle;
+  while (!closest_3.empty()) {
+    triangle.push_back(closest_3.top());
+    closest_3.pop();
+  }
+
+  // Check if the triangle is correctly constructed
+  if (triangle.size() < 3) {
+    throw std::underflow_error("Not enough edges in triangle");
+  }
+
+  return triangle;
+}
