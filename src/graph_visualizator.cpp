@@ -1,5 +1,7 @@
 #include "header/graph_visualizator.h"
 
+#include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <ctime>
 #include <fstream>
@@ -148,4 +150,27 @@ size_t GraphVisualizator::FindFarthestVertex(
   }
 
   return farthest_vert_ind;
+}
+
+std::vector<size_t> GraphVisualizator::FindKNeighbourhood(
+    const std::vector<std::vector<size_t>>& distances,
+    const size_t& vertex_ind,
+    const size_t& k) {
+  std::vector<size_t> k_neighbourhood;
+
+  for (size_t i = 0; i < vertex_num_; ++i) {
+    if (distances[vertex_ind][i] < k) {
+      k_neighbourhood.push_back(i);
+    }
+  }
+
+  return k_neighbourhood;
+}
+
+double GraphVisualizator::FindEuclideanDistance(const size_t& a, 
+                                                const size_t& b) {
+  Vertex v_1 = *graph_[a];
+  Vertex v_2 = *graph_[b];
+  
+  return std::sqrt(std::pow(v_1.x - v_2.x, 2) + std::pow(v_1.y - v_2.y, 2));
 }

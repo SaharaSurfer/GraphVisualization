@@ -63,11 +63,32 @@ private:
   // Finds the farthest vertex from the selected centers
   // Parameters:
   // - distances: APSP matrix
-  // - in_centers: A vector indicating whether each vertex is already selected as a center.
+  // - in_centers: A vector indicating whether each vertex is already
+  //   selected as a center.
   // Returns:
   // - The index of the farthest vertex from the selected centers.
   size_t FindFarthestVertex(const std::vector<std::vector<size_t>>& distances,
                             const std::vector<bool>& in_centers);
+
+  // Finds neighbourhood of vertex "v" defined
+  // to be N^k(v) = {u ∈ V | 0 ≤ d_{uv} < k}
+  // Parameters:
+  // - distances: A 2D vector representing the distances between 
+  //              vertices in the graph.
+  // - vertex_ind: The index of the vertex for which 
+  //               the k-neighbourhood is to be found.
+  // - k: The maximum distance for vertices to be 
+  //      considered in the neighbourhood.
+  // Returns:
+  // - A vector containing the indices of vertices within
+  //   the k-neighbourhood of the given vertex.
+  std::vector<size_t> FindKNeighbourhood(
+      const std::vector<std::vector<size_t>>& distances,
+      const size_t& vertex_ind, 
+      const size_t& k);
+
+  // Calculates euclidean distance between 2 vertices with given indices
+  double FindEuclideanDistance(const size_t& a, const size_t& b);
 
   size_t vertex_num_ = 0;
   size_t edge_num_ = 0;
