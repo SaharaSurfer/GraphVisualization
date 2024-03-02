@@ -45,7 +45,20 @@ private:
   std::vector<std::shared_ptr<Vertex>> graph_;
 
   // Desired length of an edge in the visualization
-  const size_t kEdgeLen_ = 30;
+  const int kEdgeLen_ = 30;
+
+  // Determines radius of local neighbourhoods
+  const int kRadius_ = 7;
+
+  // Determines number of iteration in local beautification;
+  const int kIterations_ = 4;
+
+  // Ratio between number of vertices in two consecutive levels
+  const int kRation_ = 3;
+
+  // Size of the coarsest graph
+  const int kMinSize = 10;
+
 };
 
 #endif  // GRAPHVISUALIZATION_HEADER_GRAPH_VISUALIZATOR_H_
