@@ -96,3 +96,56 @@ void GraphVisualizator::SetUpRandomLayout() {
     vertex->y = distribution(gen);
   }
 }
+
+std::vector<size_t>
+GraphVisualizator::KCenters(const size_t& k,
+                            const std::vector<std::vector<size_t>>& distances) {
+  std::vector<bool> in_centers(vertex_num_, false);
+  std::vector<size_t> centers;
+
+  // Randomly choose the first center
+  std::mt19937 gen(std::time(nullptr));
+  std::uniform_int_distribution<> distribution(0, vertex_num_ - 1);
+
+  size_t rand_ind = distribution(gen);
+  centers.push_back(rand_ind);
+  in_centers[rand_ind] = true;
+
+  // Iteratively select the remaining centers
+  for (size_t i = 1; i < k; ++i) {
+    // Find the farthest vertex from the already selected centers
+    size_t vertex_ind = FindFarthestVertex(distances, in_centers);
+    centers.push_back(vertex_ind);
+    in_centers[vertex_ind] = true;
+  }
+
+  return centers;
+}
+
+size_t GraphVisualizator::FindFarthestVertex(
+    const std::vector<std::vector<size_t>>& distances,
+    const std::vector<bool>& in_centers) {
+  size_t farthest_vert_ind = 0;
+  size_t max_dist = 0;
+
+  for (size_t i = 0; i < vertex_num_; ++i) {
+    // Skip vertices that are already selected as centers
+    if (in_centers[i]) { continue; }
+    
+    // Iterate over all selected centers to find the minimum distance to centers
+    size_t min_dist_to_centers = SIZE_MAX;
+    for (size_t j = 0; j < vertex_num_; ++j) {
+      if (!in_centers[j]) { continue; }
+
+      min_dist_to_centers = std::min(min_dist_to_centers, distances[i][j]);
+    }
+
+    // Update the farthest vertex if it has a greater minimum distance to centers
+    if (min_dist_to_centers >= max_dist) {
+      max_dist = min_dist_to_centers;
+      farthest_vert_ind = i;
+    }
+  }
+
+  return farthest_vert_ind;
+}

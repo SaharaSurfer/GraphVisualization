@@ -51,6 +51,24 @@ private:
   // Assigns random x and y coordinates to each vertex.
   void SetUpRandomLayout();
 
+  // Performs K-Centers algorithm
+  // Parameters:
+  // - k: The number of centers to find.
+  // - distances: APSP matrix
+  // Returns:
+  // - A vector containing the indices of the selected centers.
+  std::vector<size_t> KCenters(const size_t& k,
+                               const std::vector<std::vector<size_t>>& distances);
+  
+  // Finds the farthest vertex from the selected centers
+  // Parameters:
+  // - distances: APSP matrix
+  // - in_centers: A vector indicating whether each vertex is already selected as a center.
+  // Returns:
+  // - The index of the farthest vertex from the selected centers.
+  size_t FindFarthestVertex(const std::vector<std::vector<size_t>>& distances,
+                            const std::vector<bool>& in_centers);
+
   size_t vertex_num_ = 0;
   size_t edge_num_ = 0;
   std::vector<std::shared_ptr<Vertex>> graph_;
