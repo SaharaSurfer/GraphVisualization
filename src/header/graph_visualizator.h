@@ -40,6 +40,13 @@ private:
   // - a vector containing the distances from the root to all vertices
   std::vector<size_t> BFS(const std::shared_ptr<Vertex>& root);
 
+  // Finds the shortest paths between all pairs of 
+  // vertices in the graph using BFS.
+  // Returns:
+  // - A 2D vector representing the APSP matrix, where APSP[i][j] is 
+  //   the shortest distance from vertex i to vertex j.
+  std::vector<std::vector<size_t>> FindAllPairsShortestPath();
+
   size_t vertex_num_ = 0;
   size_t edge_num_ = 0;
   std::vector<std::shared_ptr<Vertex>> graph_;

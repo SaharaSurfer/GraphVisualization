@@ -73,3 +73,14 @@ std::vector<size_t> GraphVisualizator::BFS(const std::shared_ptr<Vertex>& root) 
 
   return dist;
 }
+
+std::vector<std::vector<size_t>> GraphVisualizator::FindAllPairsShortestPath() {
+  std::vector<std::vector<size_t>> APSP(vertex_num_);
+
+  // Compute shortest paths from each vertex to all other vertices using BFS
+  for (size_t i = 0; i < vertex_num_; ++i) {
+    APSP[i] = BFS(graph_[i]);
+  }
+
+  return APSP;
+}
