@@ -41,7 +41,7 @@ void GraphVisualizator::ReadGraph(const std::string& filename) {
   graph_ = graph;
 }
 
-std::vector<size_t> GraphVisualizator::BFS(std::shared_ptr<Vertex> root) {
+std::vector<size_t> GraphVisualizator::BFS(const std::shared_ptr<Vertex>& root) {
   // Since the distance in the graph between 2 vertices cannot be greater
   // than vertex_num_ - 1, the value of vertex_num_ can be used
   // to initialise unreachability.
@@ -56,7 +56,13 @@ std::vector<size_t> GraphVisualizator::BFS(std::shared_ptr<Vertex> root) {
     queue.pop();
 
     // Traverse the neighbors of the current vertex
-    for (const auto& neighbour : vertex->neighbours) {
+    for (const auto& neighbour_weak : vertex->neighbours) {
+      auto neighbour = neighbour_weak.lock();
+
+      if (!neighbour) {
+        throw std::logic_error("Neighbour is a null pointer");
+      }
+
       // Update distance if shorter path found
       if (dist[neighbour->number] > dist[vertex->number] + 1) {
         dist[neighbour->number] = dist[vertex->number] + 1;

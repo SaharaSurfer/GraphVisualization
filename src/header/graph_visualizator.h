@@ -15,7 +15,7 @@ struct Vertex {
   size_t number;
   double x = 0.0;
   double y = 0.0;
-  std::vector<std::shared_ptr<Vertex>> neighbours;
+  std::vector<std::weak_ptr<Vertex>> neighbours;
 };
 
 // GraphVisualizator class is responsible for visualizing graphs.
@@ -38,7 +38,7 @@ private:
   // - root: a shared pointer to the root vertex for BFS traversal
   // Returns:
   // - a vector containing the distances from the root to all vertices
-  std::vector<size_t> BFS(std::shared_ptr<Vertex> root);
+  std::vector<size_t> BFS(const std::shared_ptr<Vertex>& root);
 
   size_t vertex_num_ = 0;
   size_t edge_num_ = 0;
