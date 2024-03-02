@@ -70,6 +70,36 @@ private:
   size_t FindFarthestVertex(const std::vector<std::vector<size_t>>& distances,
                             const std::vector<bool>& in_centers);
 
+  // Calculates the change (∆^k_u) needed to choose the vertex to move.
+  // Computation is based on the derivatives of the energy function.
+  // Parameters:
+  // - distances: A 2D vector representing the distances between
+  //   vertices in the graph.
+  // - vertex_ind: The index of the vertex for which the change is calculated.
+  // - k: The parameter used to define the k-neighbourhood.
+  // Returns:
+  // - The change (∆^k_u) needed to choose the vertex to move.
+  double FindKDelta(const std::vector<std::vector<size_t>>& distances,
+                    const size_t& vertex_ind,
+                    const size_t& k);
+  
+  // Finds the derivative of the energy function for both x and y coordinates.
+  // The energy function represents the force exerted on a 
+  // vertex due to its neighbours.
+  // Parameters:
+  // - distances: A 2D vector representing the distances between
+  //              vertices in the graph.
+  // - vertex_ind: The index of the vertex for which
+  //               the energy derivative is calculated.
+  // - k: The parameter used to define the k-neighbourhood.
+  // Returns:
+  // - A pair containing the derivatives of the energy function
+  //   with respect to x and y coordinates.
+  std::pair<double, double> FindKEnergyDerivative(
+      const std::vector<std::vector<size_t>>& distances,
+      const size_t& vertex_ind,
+      const size_t& k);
+
   // Finds neighbourhood of vertex "v" defined
   // to be N^k(v) = {u ∈ V | 0 ≤ d_{uv} < k}
   // Parameters:

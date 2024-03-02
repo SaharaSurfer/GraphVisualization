@@ -152,6 +152,49 @@ size_t GraphVisualizator::FindFarthestVertex(
   return farthest_vert_ind;
 }
 
+double GraphVisualizator::FindKDelta(
+    const std::vector<std::vector<size_t>>& distances,
+    const size_t& vertex_ind, 
+    const size_t& k) {
+  auto derivatives = FindKEnergyDerivative(distances, vertex_ind, k);
+
+  return std::sqrt(std::pow(derivatives.first, 2) +
+                   std::pow(derivatives.second, 2));
+}
+
+std::pair<double, double> GraphVisualizator::FindKEnergyDerivative(
+      const std::vector<std::vector<size_t>>& distances,
+      const size_t& vertex_ind,
+      const size_t& k) {
+  // Find the k-neighbourhood of the vertex
+  std::vector<size_t> k_neighbourhood = FindKNeighbourhood(distances, 
+                                                           vertex_ind, k);
+  double x_k_energy_derivative = 0.0;
+  double y_k_energy_derivative = 0.0;
+
+  // Iterate over the vertices in the k-neighbourhood to compute derivatives
+  for (size_t i : k_neighbourhood) {
+    if (i == vertex_ind) { continue; }
+
+    // weighting constant that can be either:
+    // (1 / distance[u][v]) or (1 / distance[u][v]^2 )
+    double k_ij = 1 / distances[vertex_ind][i];
+
+    double dist = FindEuclideanDistance(vertex_ind, i);
+    
+    Vertex v_ind = *graph_[vertex_ind];
+    Vertex v_i = *graph_[i];
+
+    x_k_energy_derivative += 2 * k_ij * (v_ind.x - v_i.x) * 
+                             (1 - kEdgeLen_ * distances[vertex_ind][i] / dist);
+    
+    y_k_energy_derivative += 2 * k_ij * (v_ind.y - v_i.y) * 
+                             (1 - kEdgeLen_ * distances[vertex_ind][i] / dist);
+  }
+
+  return {x_k_energy_derivative, y_k_energy_derivative};
+}
+
 std::vector<size_t> GraphVisualizator::FindKNeighbourhood(
     const std::vector<std::vector<size_t>>& distances,
     const size_t& vertex_ind,
