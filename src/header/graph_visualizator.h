@@ -70,6 +70,38 @@ private:
   size_t FindFarthestVertex(const std::vector<std::vector<size_t>>& distances,
                             const std::vector<bool>& in_centers);
 
+  // Calculates the small displacement (delta) for the given
+  // vertex based on the k-neighbourhood.
+  // Parameters:
+  // - distances: A 2D vector representing the distances between
+  //   vertices in the graph.
+  // - vertex_ind: The index of the vertex for which the 
+  //   displacement is calculated.
+  // - k: The parameter used to define the k-neighbourhood.
+  // Returns:
+  // - A pair containing the calculated displacements
+  // along the x and y axes.
+  std::pair<double, double> FindKSmallDelta(
+      const std::vector<std::vector<size_t>>& distances,
+      const size_t& vertex_ind,
+      const size_t& k);
+
+  // Calculates the partial derivatives of the energy function
+  // with respect to x and y.
+  // Parameters:
+  // - distances: A 2D vector representing the distances between
+  //   vertices in the graph.
+  // - vertex_ind: The index of the vertex for which the partial
+  //   derivatives are calculated.
+  // - k: The parameter used to define the k-neighbourhood.
+  // Returns:
+  // - A vector containing the partial derivatives of the energy 
+  //   function with respect to x and y.
+  std::vector<double> FindKPartialDerivatives(
+      const std::vector<std::vector<size_t>>& distances,
+      const size_t& vertex_ind,
+      const size_t& k);
+
   // Calculates the change (∆^k_u) needed to choose the vertex to move.
   // Computation is based on the derivatives of the energy function.
   // Parameters:

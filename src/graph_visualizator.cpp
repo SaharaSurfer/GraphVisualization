@@ -152,6 +152,69 @@ size_t GraphVisualizator::FindFarthestVertex(
   return farthest_vert_ind;
 }
 
+// Computes the derivatives of the energy function and uses them to determine
+// the change in position (delta) along the x and y axes.
+std::pair<double, double> GraphVisualizator::FindKSmallDelta(
+    const std::vector<std::vector<size_t>>& distances,
+    const size_t& vertex_ind,
+    const size_t& k) {
+  std::vector<double> partial_derivatives = FindKPartialDerivatives(
+                                                distances, vertex_ind, k);
+
+  std::pair<double, double> first_derivatives = FindKEnergyDerivative(
+                                                    distances, vertex_ind, k);
+  
+  double delta_x = (-first_derivatives.first * partial_derivatives[2] + 
+                    partial_derivatives[1] * -first_derivatives.second) /
+                   (std::pow(partial_derivatives[1], 2) + 
+                   partial_derivatives[2] * partial_derivatives[0]);
+  
+  double delta_y = (partial_derivatives[1] * -first_derivatives.first +
+                    first_derivatives.second * partial_derivatives[0]) /
+                   (std::pow(partial_derivatives[1], 2) + 
+                   partial_derivatives[2] * partial_derivatives[0]);
+  
+  return {delta_x, delta_y};
+}
+
+std::vector<double> GraphVisualizator::FindKPartialDerivatives(
+    const std::vector<std::vector<size_t>>& distances,
+    const size_t& vertex_ind,
+    const size_t& k) {
+  std::vector<size_t> k_neighbourhood = FindKNeighbourhood(distances, 
+                                                           vertex_ind, k);
+  double derivative_x_x = 0.0;
+  double derivative_x_y = 0.0;
+  double derivative_y_y = 0.0;
+
+  for (size_t i : k_neighbourhood) {
+    if (i == vertex_ind) { continue; }
+
+    double k_ij = 1 / distances[vertex_ind][i];
+    double dist = FindEuclideanDistance(vertex_ind, i);
+
+    Vertex v_ind = *graph_[vertex_ind];
+    Vertex v_i = *graph_[i];
+
+    derivative_x_x += 2 * k_ij * (1 - kEdgeLen_ * 
+                                      distances[vertex_ind][i] * 
+                                      std::pow(v_ind.y - v_i.y, 2) /
+                                      std::pow(dist, 3));
+    
+    derivative_x_y += 2 * k_ij * kEdgeLen_ * 
+                      distances[vertex_ind][i] * 
+                      (v_ind.y - v_i.y) * (v_ind.x - v_i.x) /
+                      std::pow(dist, 3);
+
+    derivative_y_y += 2 * k_ij * (1 - kEdgeLen_ * 
+                                      distances[vertex_ind][i] * 
+                                      std::pow(v_ind.x - v_i.x, 2) /
+                                      std::pow(dist, 3));
+  }
+
+  return {derivative_x_x, derivative_x_y, derivative_y_y};
+}
+
 double GraphVisualizator::FindKDelta(
     const std::vector<std::vector<size_t>>& distances,
     const size_t& vertex_ind, 
