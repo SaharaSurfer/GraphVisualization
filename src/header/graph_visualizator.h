@@ -46,6 +46,10 @@ private:
   // - A 2D vector representing the APSP matrix, where APSP[i][j] is 
   //   the shortest distance from vertex i to vertex j.
   std::vector<std::vector<size_t>> FindAllPairsShortestPath();
+  
+  // Sets up a random layout for the vertices in the graph.
+  // Assigns random x and y coordinates to each vertex.
+  void SetUpRandomLayout();
 
   size_t vertex_num_ = 0;
   size_t edge_num_ = 0;

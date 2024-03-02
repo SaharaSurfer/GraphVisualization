@@ -1,9 +1,11 @@
 #include "header/graph_visualizator.h"
 
 #include <cstdint>
+#include <ctime>
 #include <fstream>
 #include <iostream>
 #include <queue>
+#include <random>
 #include <string>
 #include <vector>
 
@@ -83,4 +85,14 @@ std::vector<std::vector<size_t>> GraphVisualizator::FindAllPairsShortestPath() {
   }
 
   return APSP;
+}
+
+void GraphVisualizator::SetUpRandomLayout() {
+  std::mt19937 gen(std::time(nullptr));
+  std::uniform_int_distribution<> distribution(0, vertex_num_ * kEdgeLen_);
+
+  for (auto vertex : graph_) {
+    vertex->x = distribution(gen);
+    vertex->y = distribution(gen);
+  }
 }
