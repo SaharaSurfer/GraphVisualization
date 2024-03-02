@@ -70,6 +70,26 @@ private:
   size_t FindFarthestVertex(const std::vector<std::vector<size_t>>& distances,
                             const std::vector<bool>& in_centers);
 
+  // Computes the local layout adjustments for vertices based on the K-Centers algorithm.
+  // Iterates through a specified number of iterations, adjusting the positions
+  // of vertices locally according to the K-Centers algorithm.
+  // Parameters:
+  // - distances: A 2D vector representing the distances between vertices in the graph.
+  // - k: The parameter used in the K-Centers algorithm.
+  void ComputeLocalLayout(const std::vector<std::vector<size_t>>& distances,
+                          const size_t& k);
+
+  // Iterates through all vertices and selects the one 
+  // with the maximum FindKDelta.
+  // Parameters:
+  // - distances: A 2D vector representing the distances between
+  // vertices in the graph.
+  // - k: The parameter used in the K-Centers algorithm.
+  // Returns:
+  // - The index of the selected vertex with the largest displacement.
+  size_t ChooseVertex(const std::vector<std::vector<size_t>>& distances,
+                      const size_t& k);
+
   // Calculates the small displacement (delta) for the given
   // vertex based on the k-neighbourhood.
   // Parameters:

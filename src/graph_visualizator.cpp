@@ -152,6 +152,41 @@ size_t GraphVisualizator::FindFarthestVertex(
   return farthest_vert_ind;
 }
 
+void GraphVisualizator::ComputeLocalLayout(
+    const std::vector<std::vector<size_t>>& distances,
+    const size_t& k) {
+  // Perform local layout adjustments for a specified number of iterations
+  for (size_t i = 1; i < kIterations_ * vertex_num_; ++i) {
+    size_t ind = ChooseVertex(distances, k);
+
+    // Find displacement
+    std::pair<double, double> displacement = FindKSmallDelta(distances, 
+                                                             ind, k);
+    
+    // Update vertex
+    graph_[ind]->x += displacement.first;
+    graph_[ind]->y += displacement.second;
+  }
+}
+
+size_t GraphVisualizator::ChooseVertex(
+    const std::vector<std::vector<size_t>>& distances,
+    const size_t& k) {
+  double max_big_delta = 0.0;
+  size_t max_ind = 0;
+
+  for (size_t j = 0; j < vertex_num_; ++j) {
+    double big_delta = FindKDelta(distances, j, k);
+
+    if (big_delta >= max_big_delta) {
+      max_big_delta = big_delta;
+      max_ind = j;
+    }
+  }
+
+  return max_ind;
+}
+
 // Computes the derivatives of the energy function and uses them to determine
 // the change in position (delta) along the x and y axes.
 std::pair<double, double> GraphVisualizator::FindKSmallDelta(
