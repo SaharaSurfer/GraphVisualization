@@ -1,17 +1,18 @@
 #include "header/graph_visualizator.h"
 
-#include <algorithm>
-#include <cmath>
-#include <cstdint>
-#include <ctime>
-#include <fstream>
-#include <iostream>
-#include <limits>
-#include <queue>
-#include <random>
-#include <string>
-#include <vector>
+#include <algorithm>  // For std::min, std::max
+#include <cmath>  // For std::sqrt, std::pow, std::round
+#include <cstdint>  // For std::size_t
+#include <ctime>  // For std::time
+#include <fstream>  // For std::ifstream
+#include <limits>  // For std::numeric_limits
+#include <queue>  // For std::queue
+#include <random>  // For random number generation
+#include <string>  // For std::string
+#include <vector>  // For std::vector
 
+// Reads the graph data from a file and initializes 
+// the graph vertices and edges.
 void GraphVisualizator::ReadGraph(const std::string& filename) {
   std::ifstream input(filename);
 
@@ -27,7 +28,8 @@ void GraphVisualizator::ReadGraph(const std::string& filename) {
     graph[i] = std::make_shared<Vertex>(i);
   }
 
-  // Read the edges from the file and update the adjacency lists of the vertices
+  // Read the edges from the file and update the adjacency 
+  // lists of the vertices
   for (size_t i = 0; i < edge_num_; ++i) {
     size_t ind_1, ind_2;
     input >> ind_1 >> ind_2;
@@ -46,6 +48,8 @@ void GraphVisualizator::ReadGraph(const std::string& filename) {
   graph_ = graph;
 }
 
+// Computes the global layout adjustments for vertices 
+// based on the K-Centers algorithm.
 std::pair<int, int> GraphVisualizator::ComputeGlobalLayout() {
   // Compute the All Pairs Shortest Path (APSP) matrix for the graph
   auto APSP = FindAllPairsShortestPath();
@@ -60,20 +64,24 @@ std::pair<int, int> GraphVisualizator::ComputeGlobalLayout() {
     auto centers = KCenters(k, APSP);
     size_t max_radius = 0;
     
+    // Calculate the maximum radius among the centers
     for (size_t i : centers) {
-      size_t min_dist = SIZE_MAX;
+      size_t min_dist = std::numeric_limits<size_t>::max();
 
+      // Find the minimum distance from the current center to any other vertex
       for (size_t j = 0; j < vertex_num_; ++j) {
         if (j == i) { continue; }
 
         min_dist = std::min(min_dist, APSP[i][j]);
       }
 
+      // Update max_radius if necessary
       if (min_dist > max_radius) {
         max_radius = min_dist;
       }
     }
 
+    // Scale the max_radius by kRadius_
     max_radius *= kRadius_;
 
     // Perform local layout adjustments for vertices within
@@ -101,12 +109,13 @@ std::pair<int, int> GraphVisualizator::ComputeGlobalLayout() {
       vertex->y = graph_[min_ind]->y + distribution(gen);
     }
 
-    k *= kRatio_;
+    k *= kRatio_;  // Increase k for the next iteration
   }
 
+  // Round vertex coordinates to integers and correct for negative values
   RoundVertexCoordinates();
 
-  // Return max_x and max_y for drawing bmp
+  // Return the maximum x and y coordinates for drawing bmp
   return CorrectСoordinates();
 }
 
@@ -260,12 +269,15 @@ std::pair<double, double> GraphVisualizator::FindKSmallDelta(
     const std::vector<std::vector<size_t>>& distances,
     const size_t& vertex_ind,
     const size_t& k) {
+  // Compute partial derivatives of the energy function
   std::vector<double> partial_derivatives = FindKPartialDerivatives(
                                                 distances, vertex_ind, k);
 
+  // Compute first derivatives of the energy function
   std::pair<double, double> first_derivatives = FindKEnergyDerivative(
                                                     distances, vertex_ind, k);
   
+  // Extract coefficients for the linear system
   double a_1 = partial_derivatives[0];
   double b_1 = partial_derivatives[1];
   double c_1 = -first_derivatives.first;
@@ -274,19 +286,21 @@ std::pair<double, double> GraphVisualizator::FindKSmallDelta(
   double b_2 = partial_derivatives[2];
   double c_2 = -first_derivatives.second;
 
-  // Solve linear system
+  // Solve the linear system to find the delta values
+  // a_1 * delta_x + b_1 * delta_y = c_1
+  // a_2 * delta_x + b_2 * delta_y = c_2
   double delta_x = 0, delta_y = 0;
-  if (a_1 != 0) { // Normalize 1st eq
+  if (a_1 != 0) { // Normalize first coeff
     b_1 /= a_1;
     c_1 /= a_1;
     a_1 = 1.0;
 
-    if (a_2 != 0) { // Normalize 2nd eq
+    if (a_2 != 0) { // Normalize first coeff
       b_2 /= a_2;
       c_2 /= a_2;
       a_2 = 1.0;
 
-      // 1 eq - 2 eq
+      // Subtract the 2nd equation from the 1st equation
       a_1 = 0.0;
       b_1 -= b_2;
       c_1 -= c_2;
@@ -400,6 +414,8 @@ std::vector<size_t> GraphVisualizator::FindKNeighbourhood(
   std::vector<size_t> k_neighbourhood;
 
   for (size_t i = 0; i < vertex_num_; ++i) {
+    // Check if the distance from the current vertex to the 
+    // target vertex is within the threshold
     if (distances[vertex_ind][i] < k) {
       k_neighbourhood.push_back(i);
     }
@@ -429,7 +445,8 @@ std::pair<int, int> GraphVisualizator::CorrectСoordinates() {
   
   int max_x = std::numeric_limits<int>::min();
   int max_y = std::numeric_limits<int>::min();
-
+  
+  // Iterate over vertices to find minimum and maximum coordinates
   for (const auto& vertex : graph_) {
     min_x = std::min(min_x, static_cast<int>(vertex->x));
     min_y = std::min(min_y, static_cast<int>(vertex->y));
@@ -438,12 +455,16 @@ std::pair<int, int> GraphVisualizator::CorrectСoordinates() {
     max_y = std::max(min_y, static_cast<int>(vertex->y));
   }
 
+  // Calculate displacements to ensure all coordinates are positive
   int disp_x = kEdgeLen_ - min_x;
   int disp_y = kEdgeLen_ - min_y;
+
+  // Update vertex coordinates to ensure positivity
   for (size_t i = 0; i < vertex_num_; ++i) {
     graph_[i]->x += disp_x;
     graph_[i]->y += disp_y;
   }
 
+  // Return corrected coordinates with additional margin
   return {max_x + disp_x + kEdgeLen_, max_y + disp_y + kEdgeLen_};
 }
