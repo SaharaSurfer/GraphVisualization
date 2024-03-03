@@ -178,6 +178,8 @@ private:
   // Calculates euclidean distance between 2 vertices with given indices
   double FindEuclideanDistance(const size_t& a, const size_t& b);
 
+  void RoundVertexCoordinates();
+
   size_t vertex_num_ = 0;
   size_t edge_num_ = 0;
   std::vector<std::shared_ptr<Vertex>> graph_;

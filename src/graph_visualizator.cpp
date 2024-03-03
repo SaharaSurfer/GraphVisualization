@@ -103,6 +103,8 @@ void GraphVisualizator::ComputeGlobalLayout() {
 
     k *= kRatio_;
   }
+
+  RoundVertexCoordinates();
 }
 
 std::vector<size_t> GraphVisualizator::BFS(const std::shared_ptr<Vertex>& root) {
@@ -409,4 +411,11 @@ double GraphVisualizator::FindEuclideanDistance(const size_t& a,
   Vertex v_2 = *graph_[b];
   
   return std::sqrt(std::pow(v_1.x - v_2.x, 2) + std::pow(v_1.y - v_2.y, 2));
+}
+
+void GraphVisualizator::RoundVertexCoordinates() {
+  for (auto vertex : graph_) {
+    vertex->x = std::round(vertex->x);
+    vertex->y = std::round(vertex->y);
+  }
 }
