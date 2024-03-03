@@ -46,7 +46,7 @@ void GraphVisualizator::ReadGraph(const std::string& filename) {
   graph_ = graph;
 }
 
-void GraphVisualizator::ComputeGlobalLayout() {
+std::pair<int, int> GraphVisualizator::ComputeGlobalLayout() {
   // Compute the All Pairs Shortest Path (APSP) matrix for the graph
   auto APSP = FindAllPairsShortestPath();
 
@@ -105,6 +105,9 @@ void GraphVisualizator::ComputeGlobalLayout() {
   }
 
   RoundVertexCoordinates();
+
+  // Return max_x and max_y for drawing bmp
+  return CorrectСoordinates();
 }
 
 std::vector<size_t> GraphVisualizator::BFS(const std::shared_ptr<Vertex>& root) {
@@ -414,8 +417,33 @@ double GraphVisualizator::FindEuclideanDistance(const size_t& a,
 }
 
 void GraphVisualizator::RoundVertexCoordinates() {
-  for (auto vertex : graph_) {
-    vertex->x = std::round(vertex->x);
-    vertex->y = std::round(vertex->y);
+  for (size_t i = 0; i < vertex_num_; ++i) {
+    graph_[i]->x = std::round(graph_[i]->x);
+    graph_[i]->y = std::round(graph_[i]->y);
   }
+}
+
+std::pair<int, int> GraphVisualizator::CorrectСoordinates() {
+  int min_x = std::numeric_limits<int>::max();
+  int min_y = std::numeric_limits<int>::max();
+  
+  int max_x = std::numeric_limits<int>::min();
+  int max_y = std::numeric_limits<int>::min();
+
+  for (const auto& vertex : graph_) {
+    min_x = std::min(min_x, static_cast<int>(vertex->x));
+    min_y = std::min(min_y, static_cast<int>(vertex->y));
+
+    max_x = std::max(min_x, static_cast<int>(vertex->x));
+    max_y = std::max(min_y, static_cast<int>(vertex->y));
+  }
+
+  int disp_x = kEdgeLen_ - min_x;
+  int disp_y = kEdgeLen_ - min_y;
+  for (size_t i = 0; i < vertex_num_; ++i) {
+    graph_[i]->x += disp_x;
+    graph_[i]->y += disp_y;
+  }
+
+  return {max_x + disp_x + kEdgeLen_, max_y + disp_y + kEdgeLen_};
 }

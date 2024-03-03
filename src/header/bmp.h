@@ -2,6 +2,8 @@
 #define GRAPHVISUALIZATION_HEADER_BMP_H_
 
 #include <cstdint>
+#include <string>
+#include <vector>
 
 #pragma pack(push, 1)
 struct FileHeader {
@@ -26,5 +28,18 @@ struct InfoHeader {
   uint32_t colors_important{ 0 };
 };
 #pragma pack(pop)
+
+class BmpPainter {
+public:
+  BmpPainter() = default;
+
+  void Write(const std::string& filename);
+
+  FileHeader file_header_;
+  InfoHeader info_header_;
+  std::vector<uint8_t> data_;
+  
+private:
+};
 
 #endif  // GRAPHVISUALIZATION_HEADER_BMP_H_

@@ -33,7 +33,7 @@ public:
 
   // Computes the global layout adjustments for vertices 
   // based on the K-Centers algorithm.
-  void ComputeGlobalLayout();
+  std::pair<int, int> ComputeGlobalLayout();
 
 private:
   // BFS function performs breadth-first search traversal on the 
@@ -178,7 +178,11 @@ private:
   // Calculates euclidean distance between 2 vertices with given indices
   double FindEuclideanDistance(const size_t& a, const size_t& b);
 
+  // Rounds all vertex coordinates to the nearest integer number
   void RoundVertexCoordinates();
+
+  // Moves vertices closer to (0; 0) and makes all coordinates > 0
+  std::pair<int, int> CorrectСoordinates();
 
   size_t vertex_num_ = 0;
   size_t edge_num_ = 0;
