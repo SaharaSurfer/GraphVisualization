@@ -31,6 +31,10 @@ public:
   // - filename: the name of the file containing the graph data
   void ReadGraph(const std::string& filename);
 
+  // Computes the global layout adjustments for vertices 
+  // based on the K-Centers algorithm.
+  void ComputeGlobalLayout();
+
 private:
   // BFS function performs breadth-first search traversal on the 
   // graph starting from a given root vertex.
@@ -77,6 +81,7 @@ private:
   // - distances: A 2D vector representing the distances between vertices in the graph.
   // - k: The parameter used in the K-Centers algorithm.
   void ComputeLocalLayout(const std::vector<std::vector<size_t>>& distances,
+                          const std::vector<size_t>& centers,
                           const size_t& k);
 
   // Iterates through all vertices and selects the one 
@@ -88,6 +93,7 @@ private:
   // Returns:
   // - The index of the selected vertex with the largest displacement.
   size_t ChooseVertex(const std::vector<std::vector<size_t>>& distances,
+                      const std::vector<size_t>& centers,
                       const size_t& k);
 
   // Calculates the small displacement (delta) for the given
@@ -186,11 +192,10 @@ private:
   const int kIterations_ = 4;
 
   // Ratio between number of vertices in two consecutive levels
-  const int kRation_ = 3;
+  const int kRatio_ = 3;
 
   // Size of the coarsest graph
-  const int kMinSize = 10;
-
+  const int kMinSize_ = 10;
 };
 
 #endif  // GRAPHVISUALIZATION_HEADER_GRAPH_VISUALIZATOR_H_

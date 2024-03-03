@@ -6,6 +6,7 @@
 #include <ctime>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <queue>
 #include <random>
 #include <string>
@@ -43,6 +44,65 @@ void GraphVisualizator::ReadGraph(const std::string& filename) {
   input.close();
 
   graph_ = graph;
+}
+
+void GraphVisualizator::ComputeGlobalLayout() {
+  // Compute the All Pairs Shortest Path (APSP) matrix for the graph
+  auto APSP = FindAllPairsShortestPath();
+
+  // Set up a random layout for the initial positions of vertices
+  SetUpRandomLayout();
+
+  size_t k = kMinSize_;
+  while (k <= vertex_num_) {
+    // Find the centers using the K-Centers algorithm 
+    // based on the current value of k
+    auto centers = KCenters(k, APSP);
+    size_t max_radius = 0;
+    
+    for (size_t i : centers) {
+      size_t min_dist = SIZE_MAX;
+
+      for (size_t j = 0; j < vertex_num_; ++j) {
+        if (j == i) { continue; }
+
+        min_dist = std::min(min_dist, APSP[i][j]);
+      }
+
+      if (min_dist > max_radius) {
+        max_radius = min_dist;
+      }
+    }
+
+    max_radius *= kRadius_;
+
+    // Perform local layout adjustments for vertices within
+    // the calculated maximum radius
+    ComputeLocalLayout(APSP, centers, max_radius);
+
+    // Perturb the positions of vertices slightly
+    // to avoid clustering around centers
+    std::mt19937 gen(std::time(nullptr));
+    std::uniform_real_distribution<> distribution(0, 1);
+    for (auto vertex : graph_) {
+      double min_dist = std::numeric_limits<double>::max();
+      size_t min_ind = 0;
+
+      // Find the closest center to each vertex and perturb
+      // its position around that center
+      for (size_t i : centers) {
+        if (APSP[vertex->number][i] < min_dist) {
+          min_dist = APSP[vertex->number][i];
+          min_ind = i;
+        }
+      }
+
+      vertex->x = graph_[min_ind]->x + distribution(gen);
+      vertex->y = graph_[min_ind]->y + distribution(gen);
+    }
+
+    k *= kRatio_;
+  }
 }
 
 std::vector<size_t> GraphVisualizator::BFS(const std::shared_ptr<Vertex>& root) {
@@ -91,7 +151,7 @@ std::vector<std::vector<size_t>> GraphVisualizator::FindAllPairsShortestPath() {
 
 void GraphVisualizator::SetUpRandomLayout() {
   std::mt19937 gen(std::time(nullptr));
-  std::uniform_int_distribution<> distribution(0, vertex_num_ * kEdgeLen_);
+  std::uniform_real_distribution<> distribution(0, vertex_num_ * kEdgeLen_);
 
   for (auto vertex : graph_) {
     vertex->x = distribution(gen);
@@ -154,10 +214,11 @@ size_t GraphVisualizator::FindFarthestVertex(
 
 void GraphVisualizator::ComputeLocalLayout(
     const std::vector<std::vector<size_t>>& distances,
+    const std::vector<size_t>& centers,
     const size_t& k) {
   // Perform local layout adjustments for a specified number of iterations
   for (size_t i = 1; i < kIterations_ * vertex_num_; ++i) {
-    size_t ind = ChooseVertex(distances, k);
+    size_t ind = ChooseVertex(distances, centers, k);
 
     // Find displacement
     std::pair<double, double> displacement = FindKSmallDelta(distances, 
@@ -171,11 +232,12 @@ void GraphVisualizator::ComputeLocalLayout(
 
 size_t GraphVisualizator::ChooseVertex(
     const std::vector<std::vector<size_t>>& distances,
+    const std::vector<size_t>& centers,
     const size_t& k) {
   double max_big_delta = 0.0;
   size_t max_ind = 0;
 
-  for (size_t j = 0; j < vertex_num_; ++j) {
+  for (size_t j : centers) {
     double big_delta = FindKDelta(distances, j, k);
 
     if (big_delta >= max_big_delta) {
@@ -199,15 +261,48 @@ std::pair<double, double> GraphVisualizator::FindKSmallDelta(
   std::pair<double, double> first_derivatives = FindKEnergyDerivative(
                                                     distances, vertex_ind, k);
   
-  double delta_x = (-first_derivatives.first * partial_derivatives[2] + 
-                    partial_derivatives[1] * -first_derivatives.second) /
-                   (std::pow(partial_derivatives[1], 2) + 
-                   partial_derivatives[2] * partial_derivatives[0]);
+  double a_1 = partial_derivatives[0];
+  double b_1 = partial_derivatives[1];
+  double c_1 = -first_derivatives.first;
+
+  double a_2 = partial_derivatives[1];
+  double b_2 = partial_derivatives[2];
+  double c_2 = -first_derivatives.second;
+
+  // Solve linear system
+  double delta_x = 0, delta_y = 0;
+  if (a_1 != 0) { // Normalize 1st eq
+    b_1 /= a_1;
+    c_1 /= a_1;
+    a_1 = 1.0;
+
+    if (a_2 != 0) { // Normalize 2nd eq
+      b_2 /= a_2;
+      c_2 /= a_2;
+      a_2 = 1.0;
+
+      // 1 eq - 2 eq
+      a_1 = 0.0;
+      b_1 -= b_2;
+      c_1 -= c_2;
+
+      if (b_1 != 0) {
+        delta_y = c_1 / b_1;
+        delta_x = c_2 - delta_y * b_2;
+      }
+
+    } else if (b_2 != 0) {
+      delta_y = c_2 / b_2;
+      delta_x = (c_1 - delta_y * b_1) / a_1;
+    }
   
-  double delta_y = (partial_derivatives[1] * -first_derivatives.first +
-                    first_derivatives.second * partial_derivatives[0]) /
-                   (std::pow(partial_derivatives[1], 2) + 
-                   partial_derivatives[2] * partial_derivatives[0]);
+  } else if (b_1 != 0) {
+    delta_y = c_1 / b_1;
+
+    if (a_2 != 0) {
+      delta_x = (c_2 - delta_y * b_2) / a_2;
+    }
+  }
   
   return {delta_x, delta_y};
 }
@@ -225,26 +320,26 @@ std::vector<double> GraphVisualizator::FindKPartialDerivatives(
   for (size_t i : k_neighbourhood) {
     if (i == vertex_ind) { continue; }
 
-    double k_ij = 1 / distances[vertex_ind][i];
+    double k_ij = 1.0 / distances[vertex_ind][i];
     double dist = FindEuclideanDistance(vertex_ind, i);
 
     Vertex v_ind = *graph_[vertex_ind];
     Vertex v_i = *graph_[i];
 
-    derivative_x_x += 2 * k_ij * (1 - kEdgeLen_ * 
-                                      distances[vertex_ind][i] * 
-                                      std::pow(v_ind.y - v_i.y, 2) /
-                                      std::pow(dist, 3));
+    derivative_x_x += k_ij * (1.0 - kEdgeLen_ * 
+                              distances[vertex_ind][i] * 
+                              std::pow(v_ind.y - v_i.y, 2) /
+                              std::pow(dist, 3));
     
-    derivative_x_y += 2 * k_ij * kEdgeLen_ * 
+    derivative_x_y += k_ij * kEdgeLen_ * 
                       distances[vertex_ind][i] * 
                       (v_ind.y - v_i.y) * (v_ind.x - v_i.x) /
                       std::pow(dist, 3);
 
-    derivative_y_y += 2 * k_ij * (1 - kEdgeLen_ * 
-                                      distances[vertex_ind][i] * 
-                                      std::pow(v_ind.x - v_i.x, 2) /
-                                      std::pow(dist, 3));
+    derivative_y_y += k_ij * (1.0 - kEdgeLen_ * 
+                              distances[vertex_ind][i] * 
+                              std::pow(v_ind.x - v_i.x, 2) /
+                              std::pow(dist, 3));
   }
 
   return {derivative_x_x, derivative_x_y, derivative_y_y};
@@ -276,18 +371,18 @@ std::pair<double, double> GraphVisualizator::FindKEnergyDerivative(
 
     // weighting constant that can be either:
     // (1 / distance[u][v]) or (1 / distance[u][v]^2 )
-    double k_ij = 1 / distances[vertex_ind][i];
+    double k_ij = 1.0 / distances[vertex_ind][i];
 
     double dist = FindEuclideanDistance(vertex_ind, i);
     
     Vertex v_ind = *graph_[vertex_ind];
     Vertex v_i = *graph_[i];
 
-    x_k_energy_derivative += 2 * k_ij * (v_ind.x - v_i.x) * 
-                             (1 - kEdgeLen_ * distances[vertex_ind][i] / dist);
+    x_k_energy_derivative += k_ij * (v_ind.x - v_i.x) * 
+                             (1.0 - kEdgeLen_ * distances[vertex_ind][i] / dist);
     
-    y_k_energy_derivative += 2 * k_ij * (v_ind.y - v_i.y) * 
-                             (1 - kEdgeLen_ * distances[vertex_ind][i] / dist);
+    y_k_energy_derivative += k_ij * (v_ind.y - v_i.y) * 
+                             (1.0 - kEdgeLen_ * distances[vertex_ind][i] / dist);
   }
 
   return {x_k_energy_derivative, y_k_energy_derivative};
