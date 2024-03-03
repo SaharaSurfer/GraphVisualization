@@ -2,7 +2,7 @@
 
 #include <algorithm>  // For std::min, std::max
 #include <cmath>  // For std::sqrt, std::pow, std::round
-#include <cstdint>  // For std::size_t
+#include <cstdint>  // For size_t, uint8_t
 #include <ctime>  // For std::time
 #include <fstream>  // For std::ifstream
 #include <limits>  // For std::numeric_limits
@@ -116,7 +116,93 @@ std::pair<int, int> GraphVisualizator::ComputeGlobalLayout() {
   RoundVertexCoordinates();
 
   // Return the maximum x and y coordinates for drawing bmp
-  return CorrectСoordinates();
+  std::pair<int, int> borders = CorrectСoordinates();
+  return borders;
+}
+
+std::vector<std::vector<uint8_t>> GraphVisualizator::GetData() {
+  // Get borders
+  std::pair<int, int> borders = ComputeGlobalLayout();
+
+  // Add padding
+  borders.first += (4 - borders.first % 4) % 4;
+
+  // Initialize data matrix with 255 (white colour)
+  std::vector<std::vector<uint8_t>>
+  data(borders.second, std::vector<uint8_t>(borders.first, 255));  // Trouble with type
+
+  // Add circle around vertex position
+  for (auto vertex : graph_) {
+    // ((vertex->x + x) - vertex->x)^2 + (y - vertex->y)^2 = kCircleRadius_^2
+    for (int x = -kCircleRadius_; x < kCircleRadius_; ++x) {
+      double delta_y_sq = std::pow(kCircleRadius_, 2) -
+                          std::pow(x, 2);
+      
+      double y_1 = std::round(std::sqrt(delta_y_sq) + vertex->y);
+      double y_2 = std::round(-std::sqrt(delta_y_sq) + vertex->y);
+
+      // Shade a pixel at the desired position
+      data[y_1][vertex->x + x] = 0;
+      data[y_2][vertex->x + x] = 0;
+    }
+
+    for (int y = -kCircleRadius_; y < kCircleRadius_; ++y) {
+      double delta_x_sq = std::pow(kCircleRadius_, 2) -
+                          std::pow(y, 2);
+      
+      double x_1 = std::round(std::sqrt(delta_x_sq) + vertex->x);
+      double x_2 = std::round(-std::sqrt(delta_x_sq) + vertex->x);
+
+      // Shade a pixel at the desired position
+      data[vertex->y + y][x_1] = 0;
+      data[vertex->y + y][x_2] = 0;
+    }
+  }
+
+  // Add edges between vertices
+  std::vector<bool> visited(vertex_num_, false); // 0 - unvisited
+
+  std::queue<std::shared_ptr<Vertex>> queue;
+  queue.push(graph_[0]);
+
+  while (!queue.empty()) {
+    std::shared_ptr<Vertex> vertex = queue.front();
+    queue.pop();
+
+    visited[vertex->number] = true; // true - visited
+
+    // Traverse the neighbors of the current vertex
+    for (const auto& neighbour_weak : vertex->neighbours) {
+      auto neighbour = neighbour_weak.lock();
+      
+      if (!neighbour) {
+        throw std::logic_error("Neighbour is a null pointer");
+      }
+      
+      // Draw an edge
+      for (size_t x = vertex->x; x < neighbour->x; ++x) {
+        double y = std::round((x - vertex->x) * (neighbour->y - vertex->y) / 
+                   (neighbour->x - vertex->x) + vertex->y);
+        
+        // Shade a pixel at the desired position
+        data[y][x] = 0;
+      }
+
+      for (size_t y = vertex->y; y < neighbour->y; ++y) {
+        double x = std::round((y - vertex->y) * (neighbour->x - vertex->x) / 
+                   (neighbour->y - vertex->y) + vertex->x);
+        
+        // Shade a pixel at the desired position
+        data[y][x] = 0;
+      }
+
+      if (!visited[neighbour->number]) {
+        queue.push(neighbour);
+      }
+    }
+  }
+
+  return data;
 }
 
 std::vector<size_t> GraphVisualizator::BFS(const std::shared_ptr<Vertex>& root) {
@@ -451,8 +537,8 @@ std::pair<int, int> GraphVisualizator::CorrectСoordinates() {
     min_x = std::min(min_x, static_cast<int>(vertex->x));
     min_y = std::min(min_y, static_cast<int>(vertex->y));
 
-    max_x = std::max(min_x, static_cast<int>(vertex->x));
-    max_y = std::max(min_y, static_cast<int>(vertex->y));
+    max_x = std::max(max_x, static_cast<int>(vertex->x));
+    max_y = std::max(max_y, static_cast<int>(vertex->y));
   }
 
   // Calculate displacements to ensure all coordinates are positive

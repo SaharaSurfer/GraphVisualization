@@ -31,11 +31,13 @@ public:
   // - filename: the name of the file containing the graph data
   void ReadGraph(const std::string& filename);
 
+  std::vector<std::vector<uint8_t>> GetData();
+
+private:
   // Computes the global layout adjustments for vertices 
   // based on the K-Centers algorithm.
   std::pair<int, int> ComputeGlobalLayout();
 
-private:
   // BFS function performs breadth-first search traversal on the 
   // graph starting from a given root vertex.
   // Parameters:
@@ -190,6 +192,9 @@ private:
 
   // Desired length of an edge in the visualization
   const int kEdgeLen_ = 30;
+
+  // Desired radius of a circle presenting vertex in the visualization
+  const int kCircleRadius_ = 5;
 
   // Determines radius of local neighbourhoods
   const int kRadius_ = 7;
