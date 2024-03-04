@@ -132,7 +132,7 @@ std::vector<std::vector<uint8_t>> GraphVisualizator::GetData() {
   data(borders.second, std::vector<uint8_t>(borders.first, 255));  // Trouble with type
 
   // Add circle around vertex position
-  for (auto vertex : graph_) {
+  for (const auto& vertex : graph_) {
     // ((vertex->x + x) - vertex->x)^2 + (y - vertex->y)^2 = kCircleRadius_^2
     for (int x = -kCircleRadius_; x < kCircleRadius_; ++x) {
       double delta_y_sq = std::pow(kCircleRadius_, 2) -
@@ -160,21 +160,10 @@ std::vector<std::vector<uint8_t>> GraphVisualizator::GetData() {
   }
 
   // Add edges between vertices
-  std::vector<bool> visited(vertex_num_, false); // 0 - unvisited
-
-  std::queue<std::shared_ptr<Vertex>> queue;
-  queue.push(graph_[0]);
-
-  while (!queue.empty()) {
-    std::shared_ptr<Vertex> vertex = queue.front();
-    queue.pop();
-
-    visited[vertex->number] = true; // true - visited
-
-    // Traverse the neighbors of the current vertex
+  for (const auto& vertex : graph_) {
     for (const auto& neighbour_weak : vertex->neighbours) {
       auto neighbour = neighbour_weak.lock();
-      
+
       if (!neighbour) {
         throw std::logic_error("Neighbour is a null pointer");
       }
@@ -215,13 +204,8 @@ std::vector<std::vector<uint8_t>> GraphVisualizator::GetData() {
 
         data[y][x] = 0;
       }
-
-      if (!visited[neighbour->number]) {
-        queue.push(neighbour);
-      }
     }
   }
-
   return data;
 }
 
