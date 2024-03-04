@@ -65,16 +65,6 @@ private:
   // - A vector containing the indices of the selected centers.
   std::vector<size_t> KCenters(const size_t& k,
                                const std::vector<std::vector<size_t>>& distances);
-  
-  // Finds the farthest vertex from the selected centers
-  // Parameters:
-  // - distances: APSP matrix
-  // - in_centers: A vector indicating whether each vertex is already
-  //   selected as a center.
-  // Returns:
-  // - The index of the farthest vertex from the selected centers.
-  size_t FindFarthestVertex(const std::vector<std::vector<size_t>>& distances,
-                            const std::vector<bool>& in_centers);
 
   // Computes the local layout adjustments for vertices based on the K-Centers algorithm.
   // Iterates through a specified number of iterations, adjusting the positions
