@@ -116,7 +116,7 @@ std::pair<int, int> GraphVisualizator::ComputeGlobalLayout() {
   RoundVertexCoordinates();
 
   // Return the maximum x and y coordinates for drawing bmp
-  std::pair<int, int> borders = CorrectСoordinates();
+  std::pair<int, int> borders = CorrectCoordinates();
   return borders;
 }
 
@@ -185,6 +185,16 @@ std::vector<std::vector<uint8_t>> GraphVisualizator::GetData() {
                    (neighbour->x - vertex->x) + vertex->y);
         
         // Shade a pixel at the desired position
+        if (std::pow(y - neighbour->y, 2) + 
+            std::pow(x - neighbour->x, 2) < std::pow(kRadius_, 2)) {
+          continue;
+        }
+
+        if (std::pow(y - vertex->y, 2) + 
+            std::pow(x - vertex->x, 2) < std::pow(kRadius_, 2)) {
+          continue;
+        }
+
         data[y][x] = 0;
       }
 
@@ -193,6 +203,16 @@ std::vector<std::vector<uint8_t>> GraphVisualizator::GetData() {
                    (neighbour->y - vertex->y) + vertex->x);
         
         // Shade a pixel at the desired position
+        if (std::pow(y - neighbour->y, 2) + 
+            std::pow(x - neighbour->x, 2) < std::pow(kRadius_, 2)) {
+          continue;
+        }
+
+        if (std::pow(y - vertex->y, 2) + 
+            std::pow(x - vertex->x, 2) < std::pow(kRadius_, 2)) {
+          continue;
+        }
+
         data[y][x] = 0;
       }
 
@@ -525,7 +545,7 @@ void GraphVisualizator::RoundVertexCoordinates() {
   }
 }
 
-std::pair<int, int> GraphVisualizator::CorrectСoordinates() {
+std::pair<int, int> GraphVisualizator::CorrectCoordinates() {
   int min_x = std::numeric_limits<int>::max();
   int min_y = std::numeric_limits<int>::max();
   

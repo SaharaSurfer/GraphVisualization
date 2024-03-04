@@ -184,7 +184,7 @@ private:
   void RoundVertexCoordinates();
 
   // Moves vertices closer to (0; 0) and makes all coordinates > 0
-  std::pair<int, int> CorrectСoordinates();
+  std::pair<int, int> CorrectCoordinates();
 
   size_t vertex_num_ = 0;
   size_t edge_num_ = 0;
