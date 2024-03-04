@@ -68,7 +68,7 @@ std::pair<int, int> GraphVisualizator::ComputeGlobalLayout() {
       size_t min_dist = std::numeric_limits<size_t>::max();
 
       // Find the minimum distance from the current center to any other vertex
-      for (size_t j = 0; j < vertex_num_; ++j) {
+      for (size_t j : centers) {
         if (j == i) { continue; }
 
         min_dist = std::min(min_dist, APSP[i][j]);
@@ -90,7 +90,7 @@ std::pair<int, int> GraphVisualizator::ComputeGlobalLayout() {
     // Perturb the positions of vertices slightly
     // to avoid clustering around centers
     std::mt19937 gen(std::random_device{}());
-    std::uniform_real_distribution<> distribution(0, 1);
+    std::uniform_real_distribution<> distribution(0.1, 1);
     for (auto vertex : graph_) {
       double min_dist = std::numeric_limits<double>::max();
       size_t min_ind = 0;
@@ -128,7 +128,7 @@ std::vector<std::vector<uint8_t>> GraphVisualizator::GetData() {
 
   // Initialize data matrix with 255 (white colour)
   std::vector<std::vector<uint8_t>>
-  data(borders.second, std::vector<uint8_t>(borders.first, 255));  // Trouble with type
+  data(borders.second, std::vector<uint8_t>(borders.first, 255));
 
   // Add circle around vertex position
   for (const auto& vertex : graph_) {
@@ -301,7 +301,7 @@ void GraphVisualizator::ComputeLocalLayout(
     const std::vector<size_t>& centers,
     const size_t& k) {
   // Perform local layout adjustments for a specified number of iterations
-  for (size_t i = 1; i < kIterations_ * vertex_num_; ++i) {
+  for (size_t i = 0; i < kIterations_ * vertex_num_; ++i) {
     size_t ind = ChooseVertex(distances, centers, k);
 
     // Find displacement
@@ -318,19 +318,17 @@ size_t GraphVisualizator::ChooseVertex(
     const std::vector<std::vector<size_t>>& distances,
     const std::vector<size_t>& centers,
     const size_t& k) {
-  double max_big_delta = 0.0;
-  size_t max_ind = 0;
+  // Define a priority queue to store vertices based on their big_delta value
+  std::priority_queue<std::pair<double, size_t>> pq;
 
+  // Calculate big_delta for each center and push it into the priority queue
   for (size_t j : centers) {
     double big_delta = FindKDelta(distances, j, k);
-
-    if (big_delta >= max_big_delta) {
-      max_big_delta = big_delta;
-      max_ind = j;
-    }
+    pq.push({big_delta, j});
   }
 
-  return max_ind;
+  // Retrieve the vertex with the maximum big_delta from the priority queue
+  return pq.top().second;
 }
 
 // Computes the derivatives of the energy function and uses them to determine
@@ -409,7 +407,10 @@ std::vector<double> GraphVisualizator::FindKPartialDerivatives(
   for (size_t i : k_neighbourhood) {
     if (i == vertex_ind) { continue; }
 
+    // Weighting constant that can be either:
+    // (1 / distance[u][v]) or (1 / distance[u][v]^2 )
     double k_ij = 1.0 / distances[vertex_ind][i];
+
     double dist = FindEuclideanDistance(vertex_ind, i);
 
     Vertex v_ind = *graph_[vertex_ind];
@@ -438,7 +439,8 @@ double GraphVisualizator::FindKDelta(
     const std::vector<std::vector<size_t>>& distances,
     const size_t& vertex_ind, 
     const size_t& k) {
-  auto derivatives = FindKEnergyDerivative(distances, vertex_ind, k);
+  std::pair<double, double> derivatives = FindKEnergyDerivative(distances, 
+                                                                vertex_ind, k);
 
   return std::sqrt(std::pow(derivatives.first, 2) +
                    std::pow(derivatives.second, 2));
@@ -458,7 +460,7 @@ std::pair<double, double> GraphVisualizator::FindKEnergyDerivative(
   for (size_t i : k_neighbourhood) {
     if (i == vertex_ind) { continue; }
 
-    // weighting constant that can be either:
+    // Weighting constant that can be either:
     // (1 / distance[u][v]) or (1 / distance[u][v]^2 )
     double k_ij = 1.0 / distances[vertex_ind][i];
 
@@ -467,11 +469,11 @@ std::pair<double, double> GraphVisualizator::FindKEnergyDerivative(
     Vertex v_ind = *graph_[vertex_ind];
     Vertex v_i = *graph_[i];
 
-    x_k_energy_derivative += k_ij * (v_ind.x - v_i.x) * 
-                             (1.0 - kEdgeLen_ * distances[vertex_ind][i] / dist);
+    x_k_energy_derivative += k_ij * ((v_ind.x - v_i.x) - (v_ind.x - v_i.x) * 
+                             kEdgeLen_ * distances[vertex_ind][i] / dist);
     
-    y_k_energy_derivative += k_ij * (v_ind.y - v_i.y) * 
-                             (1.0 - kEdgeLen_ * distances[vertex_ind][i] / dist);
+    y_k_energy_derivative += k_ij * ((v_ind.y - v_i.y) - (v_ind.y - v_i.y) *
+                             kEdgeLen_ * distances[vertex_ind][i] / dist);
   }
 
   return {x_k_energy_derivative, y_k_energy_derivative};
