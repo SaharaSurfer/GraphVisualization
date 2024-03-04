@@ -104,6 +104,8 @@ private:
       const size_t& vertex_ind,
       const size_t& k);
 
+  // Energy represents the normalized mean squared error between the Euclidean
+  // distance of vertices in the picture and the graph-theoretic distance.
   // Calculates the partial derivatives of the energy function
   // with respect to x and y.
   // Parameters:
@@ -133,6 +135,8 @@ private:
                     const size_t& vertex_ind,
                     const size_t& k);
   
+  // Energy represents the normalized mean squared error between the Euclidean
+  // distance of vertices in the picture and the graph-theoretic distance.
   // Finds the derivative of the energy function for both x and y coordinates.
   // The energy function represents the force exerted on a 
   // vertex due to its neighbours.
