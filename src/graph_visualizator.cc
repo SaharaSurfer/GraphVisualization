@@ -1,14 +1,17 @@
 #include "header/graph_visualizator.h"
 
-#include <algorithm>  // For std::min, std::max
+#include <algorithm>  // For std::min, std::max, std::transform, std::max_element
 #include <cmath>  // For std::sqrt, std::pow, std::round
 #include <cstdint>  // For size_t, uint8_t
 #include <fstream>  // For std::ifstream
+#include <iterator> // For std::distance
 #include <limits>  // For std::numeric_limits
-#include <queue>  // For std::queue
+#include <queue>  // For std::queue, std::priority_queue
 #include <random>  // For random number generation
+#include <stdexcept> // For std::runtime_error, std::logic_error
 #include <string>  // For std::string
 #include <vector>  // For std::vector
+#include <memory> // For std::shared_ptr
 
 // Reads the graph data from a file and initializes 
 // the graph vertices and edges.
