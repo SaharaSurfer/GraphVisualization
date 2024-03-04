@@ -3,7 +3,6 @@
 #include <algorithm>  // For std::min, std::max
 #include <cmath>  // For std::sqrt, std::pow, std::round
 #include <cstdint>  // For size_t, uint8_t
-#include <ctime>  // For std::time
 #include <fstream>  // For std::ifstream
 #include <limits>  // For std::numeric_limits
 #include <queue>  // For std::queue
@@ -90,7 +89,7 @@ std::pair<int, int> GraphVisualizator::ComputeGlobalLayout() {
 
     // Perturb the positions of vertices slightly
     // to avoid clustering around centers
-    std::mt19937 gen(std::time(nullptr));
+    std::mt19937 gen(std::random_device{}());
     std::uniform_real_distribution<> distribution(0, 1);
     for (auto vertex : graph_) {
       double min_dist = std::numeric_limits<double>::max();
@@ -254,7 +253,7 @@ std::vector<std::vector<size_t>> GraphVisualizator::FindAllPairsShortestPath() {
 }
 
 void GraphVisualizator::SetUpRandomLayout() {
-  std::mt19937 gen(std::time(nullptr));
+  std::mt19937 gen(std::random_device{}());
   std::uniform_real_distribution<> distribution(0, vertex_num_ * kEdgeLen_);
 
   for (auto vertex : graph_) {
@@ -266,47 +265,32 @@ void GraphVisualizator::SetUpRandomLayout() {
 std::vector<size_t>
 GraphVisualizator::KCenters(const size_t& k,
                             const std::vector<std::vector<size_t>>& distances) {
-  std::vector<bool> in_centers(vertex_num_, false);
-  std::vector<size_t> centers(k, vertex_num_);
+  std::vector<size_t> centers;
+  centers.reserve(k);
 
   // Randomly choose the first center
-  std::mt19937 gen(std::time(nullptr));
+  std::mt19937 gen(std::random_device{}());
   std::uniform_int_distribution<> distribution(0, vertex_num_ - 1);
 
   size_t rand_ind = distribution(gen);
-  centers[0] = rand_ind;
-  in_centers[rand_ind] = true;
+  centers.emplace_back(rand_ind);
 
   // Memorize the current distance of every vertex from the centers
-  std::vector<size_t> min_dist_to_centers(vertex_num_, std::numeric_limits<size_t>::max());
-  for (size_t i = 0; i < vertex_num_; ++i) {
-      if (!in_centers[i]) {
-          min_dist_to_centers[i] = distances[i][rand_ind];
-      }
-  }
+  std::vector<size_t> min_dist_to_centers(vertex_num_);
+  std::transform(distances.begin(), distances.end(), min_dist_to_centers.begin(),
+                   [rand_ind](const std::vector<size_t>& dist) { return dist[rand_ind]; });
 
   // Iteratively select the remaining centers
   for (size_t i = 1; i < k; ++i) {
     // Find the farthest vertex from the already selected centers
-    size_t farthest_vertex = vertex_num_;
-    size_t max_dist = 0;
+    auto farthest_iter = std::max_element(min_dist_to_centers.begin(), min_dist_to_centers.end());
+    size_t farthest_vertex = std::distance(min_dist_to_centers.begin(), farthest_iter);
+    centers.emplace_back(farthest_vertex);
 
-    for (size_t j = 0; j < vertex_num_; ++j) {
-      if (!in_centers[j] && min_dist_to_centers[j] >= max_dist) {
-        max_dist = min_dist_to_centers[j];
-        farthest_vertex = j;
-      }
-    }
-        
-    centers[i] = farthest_vertex;
-    in_centers[farthest_vertex] = true;
-    
-    // Update distances to the nearest center for vertices not yet selected
-    for (size_t j = 0; j < vertex_num_; ++j) {
-      if (!in_centers[j]) {
-        min_dist_to_centers[j] = std::min(min_dist_to_centers[j], distances[j][farthest_vertex]);
-      }
-    }
+    // Update min_dist_to_centers with distances to the new center
+    std::transform(distances[farthest_vertex].begin(), distances[farthest_vertex].end(),
+                   min_dist_to_centers.begin(), min_dist_to_centers.begin(),
+                   [](size_t dist, size_t min_dist) { return std::min(dist, min_dist); });
   }
 
   return centers;
