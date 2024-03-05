@@ -188,7 +188,7 @@ private:
   const int kEdgeLen_ = 30;
 
   // Desired radius of a circle presenting vertex in the visualization
-  const int kCircleRadius_ = 5;
+  const int kCircleRadius_ = 4;
 
   // Determines radius of local neighbourhoods
   const int kRadius_ = 7;

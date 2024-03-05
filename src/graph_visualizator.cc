@@ -135,29 +135,17 @@ std::vector<std::vector<uint8_t>> GraphVisualizator::GetData() {
 
   // Add circle around vertex position
   for (const auto& vertex : graph_) {
-    // ((vertex->x + x) - vertex->x)^2 + (y - vertex->y)^2 = kCircleRadius_^2
-    for (int x = -kCircleRadius_; x < kCircleRadius_; ++x) {
-      double delta_y_sq = std::pow(kCircleRadius_, 2) -
-                          std::pow(x, 2);
-      
-      double y_1 = std::round(std::sqrt(delta_y_sq) + vertex->y);
-      double y_2 = std::round(-std::sqrt(delta_y_sq) + vertex->y);
+    for (int y = -kCircleRadius_; y <= kCircleRadius_; ++y) {
+      for (int x = -kCircleRadius_; x <= kCircleRadius_; ++x) {
+        if (x * x + y * y <= kCircleRadius_ * kCircleRadius_) {
+          int posX = static_cast<int>(std::round(vertex->x)) + x;
+          int posY = static_cast<int>(std::round(vertex->y)) + y;
 
-      // Shade a pixel at the desired position
-      data[y_1][vertex->x + x] = 0;
-      data[y_2][vertex->x + x] = 0;
-    }
-
-    for (int y = -kCircleRadius_; y < kCircleRadius_; ++y) {
-      double delta_x_sq = std::pow(kCircleRadius_, 2) -
-                          std::pow(y, 2);
-      
-      double x_1 = std::round(std::sqrt(delta_x_sq) + vertex->x);
-      double x_2 = std::round(-std::sqrt(delta_x_sq) + vertex->x);
-
-      // Shade a pixel at the desired position
-      data[vertex->y + y][x_1] = 0;
-      data[vertex->y + y][x_2] = 0;
+          if (posX >= 0 && posY >= 0 && posX < borders.first && posY < borders.second) {
+            data[posY][posX] = 0; // Set pixel to black
+          }
+        }
+      }
     }
   }
 
@@ -169,45 +157,33 @@ std::vector<std::vector<uint8_t>> GraphVisualizator::GetData() {
       if (!neighbour) {
         throw std::logic_error("Neighbour is a null pointer");
       }
-      
-      // Draw an edge
-      for (size_t x = vertex->x; x < neighbour->x; ++x) {
-        double y = std::round((x - vertex->x) * (neighbour->y - vertex->y) / 
-                   (neighbour->x - vertex->x) + vertex->y);
-        
-        // Shade a pixel at the desired position
-        if (std::pow(y - neighbour->y, 2) + 
-            std::pow(x - neighbour->x, 2) < std::pow(kRadius_, 2)) {
-          continue;
+
+      // Bresenham's line algorithm to draw a line between two points
+      int x0 = static_cast<int>(std::round(vertex->x));
+      int y0 = static_cast<int>(std::round(vertex->y));
+      int x1 = static_cast<int>(std::round(neighbour->x));
+      int y1 = static_cast<int>(std::round(neighbour->y));
+
+      int dx = std::abs(x1 - x0);
+      int dy = std::abs(y1 - y0);
+      int sx = x0 < x1 ? 1 : -1;
+      int sy = y0 < y1 ? 1 : -1;
+      int err = (dx > dy ? dx : -dy) / 2;
+      int e2;
+
+      while (true) {
+        if (x0 >= 0 && y0 >= 0 && x0 < borders.first && y0 < borders.second) {
+          data[y0][x0] = 0; // Set pixel to black
         }
 
-        if (std::pow(y - vertex->y, 2) + 
-            std::pow(x - vertex->x, 2) < std::pow(kRadius_, 2)) {
-          continue;
-        }
-
-        data[y][x] = 0;
-      }
-
-      for (size_t y = vertex->y; y < neighbour->y; ++y) {
-        double x = std::round((y - vertex->y) * (neighbour->x - vertex->x) / 
-                   (neighbour->y - vertex->y) + vertex->x);
-        
-        // Shade a pixel at the desired position
-        if (std::pow(y - neighbour->y, 2) + 
-            std::pow(x - neighbour->x, 2) < std::pow(kRadius_, 2)) {
-          continue;
-        }
-
-        if (std::pow(y - vertex->y, 2) + 
-            std::pow(x - vertex->x, 2) < std::pow(kRadius_, 2)) {
-          continue;
-        }
-
-        data[y][x] = 0;
+        if (x0 == x1 && y0 == y1) break;
+        e2 = err;
+        if (e2 > -dx) { err -= dy; x0 += sx; }
+        if (e2 <  dy) { err += dx; y0 += sy; }
       }
     }
   }
+
   return data;
 }
 
