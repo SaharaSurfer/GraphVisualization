@@ -34,13 +34,13 @@ struct RGB {
   uint8_t blue;
   uint8_t reserved = 0;
 };
-
 #pragma pack(pop)
 
 class BmpPainter {
 public:
   BmpPainter() { CreateColorTable(); };
 
+  void Read(const std::string& filename);
   void Write(const std::string& filename);
 
   FileHeader file_header_;
