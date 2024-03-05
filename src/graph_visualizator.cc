@@ -13,6 +13,8 @@
 #include <vector>  // For std::vector
 #include <memory> // For std::shared_ptr
 
+#include "header/bmp.h"
+
 // Reads the graph data from a file and initializes 
 // the graph vertices and edges.
 void GraphVisualizator::ReadGraph(const std::string& filename) {
@@ -146,6 +148,30 @@ std::vector<std::vector<uint8_t>> GraphVisualizator::GetData() {
           }
         }
       }
+    }
+
+    // Add numbers of vertices next to them
+    std::string vertex_number_string = std::to_string(vertex->number + 1);
+    size_t start_x = vertex->x + kRadius_ + 5;
+    size_t start_y = vertex->y - 4;
+
+    for (auto& digit : vertex_number_string) {
+      std::string filename(1, digit);
+      filename = "../src/digits/" + filename + ".bmp";
+
+      BmpPainter digit_bmp;
+      digit_bmp.Read(filename);
+
+      size_t width = digit_bmp.info_header_.width;
+      size_t height = digit_bmp.info_header_.height;
+
+      for (size_t y = 0; y < height; ++y) {
+        for (size_t x = 0; x < width; ++x) {
+          data[start_y + y][start_x + x] = digit_bmp.data_[y * width + x];
+        }
+      }
+
+      start_x += width;
     }
   }
 

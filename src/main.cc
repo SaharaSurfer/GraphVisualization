@@ -8,11 +8,11 @@
 #include "header/graph_visualizator.h"
 
 int main() {
+  BmpPainter bob_ross;
+
   GraphVisualizator gr_bob_ross;
   gr_bob_ross.ReadGraph("../src/test.txt");
   std::vector<std::vector<uint8_t>> data = gr_bob_ross.GetData();
-
-  BmpPainter bob_ross;
 
   std::vector<uint8_t> flattened_data;
   for (const auto& row : data) {
