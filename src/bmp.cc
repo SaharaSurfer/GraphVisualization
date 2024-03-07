@@ -1,11 +1,12 @@
 #include "header/bmp.h"
 
+#include <cstdint>
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <vector>
 
-void BmpPainter::Read(const std::string& filename) {
+void Bmp::Read(const std::string& filename) {
   std::ifstream image(filename, std::ios::binary);
 
   if (!image.is_open()) {
@@ -28,7 +29,7 @@ void BmpPainter::Read(const std::string& filename) {
   image.close();
 }
 
-void BmpPainter::Write(const std::string& filename) {
+void Bmp::Write(const std::string& filename) {
   std::ofstream image(filename, std::ios::binary);
   
   if (!image.is_open()) {
@@ -50,7 +51,32 @@ void BmpPainter::Write(const std::string& filename) {
   image.close();
 }
 
-void BmpPainter::CreateColorTable() {
+void Bmp::Interpret(const DataMatrix& data) {
+  // Clear data_ vector and reserve enough space
+  std::vector<uint8_t>().swap(data_);
+  data_.reserve(data.size() * data[0].size());
+
+  // Fill data_ vector with given data
+  for (const auto& row : data) {
+    data_.insert(data_.end(), row.begin(), row.end());
+  }
+
+  // Check the correctness of the data
+  if (data_.size() != data_.capacity()) {
+    throw std::invalid_argument("Not enough data to interpret");
+  }
+
+  // Modify FileHeader
+  file_header_.file_size = sizeof(FileHeader) + sizeof(InfoHeader) + 
+                           color_table_.size() * sizeof(RGB) + data.size();
+
+  // Modify InfoHeader
+  info_header_.height = data.size();
+  info_header_.width = data[0].size();
+  info_header_.size_image = data_.size();
+}
+
+void Bmp::CreateColorTable() {
   for (int i = 0; i < 256; ++i) {
     color_table_[i].red = i;
     color_table_[i].green = i;

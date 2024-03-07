@@ -8,7 +8,7 @@
 #pragma pack(push, 1)
 struct FileHeader {
   uint16_t file_type{ 0x4D42 };
-  uint32_t file_size{ 54 };
+  uint32_t file_size{ 0 };
   uint16_t reserved_1{ 0 };
   uint16_t reserved_2{ 0 };
   uint32_t offset_data{ 54 + 256 * 4 };
@@ -36,20 +36,23 @@ struct RGB {
 };
 #pragma pack(pop)
 
-class BmpPainter {
-public:
-  BmpPainter() { CreateColorTable(); };
+using DataMatrix = std::vector<std::vector<uint8_t>>;
+
+class Bmp {
+ public:
+  Bmp() { CreateColorTable(); };
 
   void Read(const std::string& filename);
   void Write(const std::string& filename);
+  void Interpret(const DataMatrix& data);
+  
+ private:
+  void CreateColorTable();
 
   FileHeader file_header_;
   InfoHeader info_header_;
   std::vector<RGB> color_table_{ 256 };
   std::vector<uint8_t> data_;
-  
-private:
-  void CreateColorTable();
 };
 
 #endif  // GRAPHVISUALIZATION_HEADER_BMP_H_

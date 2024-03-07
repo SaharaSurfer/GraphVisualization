@@ -159,7 +159,7 @@ std::vector<std::vector<uint8_t>> GraphVisualizator::GetData() {
       std::string filename(1, digit);
       filename = "../src/digits/" + filename + ".bmp";
 
-      BmpPainter digit_bmp;
+      Bmp digit_bmp;
       digit_bmp.Read(filename);
 
       size_t width = digit_bmp.info_header_.width;
