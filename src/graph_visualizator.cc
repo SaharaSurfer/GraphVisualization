@@ -90,27 +90,17 @@ std::pair<int, int> GraphVisualizator::ComputeGlobalLayout() {
 
     // Perform local layout adjustments for vertices within
     // the calculated maximum radius
-    ComputeLocalLayout(APSP, centers, max_radius);
+    for (size_t center : centers) {
+      ComputeLocalLayout(APSP, center, max_radius);
+    }
 
     // Perturb the positions of vertices slightly
     // to avoid clustering around centers
     std::mt19937 gen(std::random_device{}());
     std::uniform_real_distribution<> distribution(0.1, 1);
     for (auto vertex : graph_) {
-      double min_dist = std::numeric_limits<double>::max();
-      size_t min_ind = 0;
-
-      // Find the closest center to each vertex and perturb
-      // its position around that center
-      for (size_t i : centers) {
-        if (APSP[vertex->number][i] < min_dist) {
-          min_dist = APSP[vertex->number][i];
-          min_ind = i;
-        }
-      }
-
-      vertex->x = graph_[min_ind]->x + distribution(gen);
-      vertex->y = graph_[min_ind]->y + distribution(gen);
+      vertex->x += distribution(gen);
+      vertex->y += distribution(gen);
     }
 
     k *= kRatio_;  // Increase k for the next iteration
@@ -303,11 +293,13 @@ GraphVisualizator::KCenters(const size_t& k,
 
 void GraphVisualizator::ComputeLocalLayout(
     const std::vector<std::vector<size_t>>& distances,
-    const std::vector<size_t>& centers,
+    const size_t& center,
     const size_t& k) {
+  std::vector<size_t> k_neighbourhood = FindKNeighbourhood(distances, center, k);
+
   // Perform local layout adjustments for a specified number of iterations
   for (size_t i = 0; i < kIterations_ * vertex_num_; ++i) {
-    size_t ind = ChooseVertex(distances, centers, k);
+    size_t ind = ChooseVertex(distances, k_neighbourhood, k);
 
     // Find displacement
     std::pair<double, double> displacement = FindKSmallDelta(distances, 
@@ -321,13 +313,13 @@ void GraphVisualizator::ComputeLocalLayout(
 
 size_t GraphVisualizator::ChooseVertex(
     const std::vector<std::vector<size_t>>& distances,
-    const std::vector<size_t>& centers,
+    const std::vector<size_t>& neighbourhood,
     const size_t& k) {
   // Define a priority queue to store vertices based on their big_delta value
   std::priority_queue<std::pair<double, size_t>> pq;
 
   // Calculate big_delta for each center and push it into the priority queue
-  for (size_t j : centers) {
+  for (size_t j : neighbourhood) {
     double big_delta = FindKDelta(distances, j, k);
     pq.push({big_delta, j});
   }

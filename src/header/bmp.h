@@ -45,14 +45,14 @@ class Bmp {
   void Read(const std::string& filename);
   void Write(const std::string& filename);
   void Interpret(const DataMatrix& data);
-  
- private:
-  void CreateColorTable();
 
   FileHeader file_header_;
   InfoHeader info_header_;
   std::vector<RGB> color_table_{ 256 };
   std::vector<uint8_t> data_;
+  
+ private:
+  void CreateColorTable();
 };
 
 #endif  // GRAPHVISUALIZATION_HEADER_BMP_H_

@@ -73,7 +73,7 @@ private:
   // - distances: A 2D vector representing the distances between vertices in the graph.
   // - k: The parameter used in the K-Centers algorithm.
   void ComputeLocalLayout(const std::vector<std::vector<size_t>>& distances,
-                          const std::vector<size_t>& centers,
+                          const size_t& center,
                           const size_t& k);
 
   // Iterates through all vertices and selects the one 
@@ -85,7 +85,7 @@ private:
   // Returns:
   // - The index of the selected vertex with the largest displacement.
   size_t ChooseVertex(const std::vector<std::vector<size_t>>& distances,
-                      const std::vector<size_t>& centers,
+                      const std::vector<size_t>& neighbourhood,
                       const size_t& k);
 
   // Calculates the small displacement (delta) for the given
@@ -200,7 +200,7 @@ private:
   const int kRatio_ = 3;
 
   // Size of the coarsest graph
-  const int kMinSize_ = 10;
+  const int kMinSize_ = 3;
 };
 
 #endif  // GRAPHVISUALIZATION_HEADER_GRAPH_VISUALIZATOR_H_
