@@ -8,16 +8,11 @@
 #include "header/graph_visualizator.h"
 
 int main() {
-  Bmp bob_ross;
-
-  GraphVisualizator gr_bob_ross;
-  gr_bob_ross.ReadGraph("../src/graphs/slipper.txt");
-  DataMatrix data = gr_bob_ross.GetData();
-
-  bob_ross.Interpret(data);
-
-  std::string filename = "image.bmp";
-  bob_ross.Write(filename);
+  Graph graph;
+  graph.ReadGraph("../src/graphs/star.txt");
+  
+  GraphVisualizator bob_ross;
+  bob_ross.DrawBmp(graph, "image.bmp");
 
   return 0;
 }
